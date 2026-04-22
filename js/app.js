@@ -1,4 +1,5 @@
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+let globalData = null;
 const COLOR_GOAL    = '#71717a';   // gray-500
 const COLOR_ACTUAL  = '#f97316';   // orange
 const COLOR_PROJECT = '#f97316';   // orange
@@ -88,7 +89,7 @@ function renderMainSCurve(data) {
 
 function renderSubChart(canvasId, projects, type) {
   const { planned, actual } = buildMonthlyAggregates(projects, type);
-  const maskedActual = actual.map((v, i) => i < MOCK_DATA.lastUpdatedMonth ? v : null);
+  const maskedActual = actual.map((v, i) => i < globalData.lastUpdatedMonth ? v : null);
 
   const canvas = document.getElementById(canvasId);
   const ctx    = canvas.getContext('2d');
@@ -293,7 +294,7 @@ function renderMonthlyTable(p) {
   // จ่ายจริงสะสม
   html += '<tr><td class="row-label">จ่ายจริงสะสม (ลบ.)</td>';
   cumActual.forEach((v, i) => {
-    const show = i < MOCK_DATA.lastUpdatedMonth;
+    const show = i < globalData.lastUpdatedMonth;
     html += `<td>${show ? v.toFixed(3) : '—'}</td>`;
   });
   html += '</tr>';
@@ -301,7 +302,7 @@ function renderMonthlyTable(p) {
   // ส่วนต่าง
   html += '<tr><td class="row-label">ส่วนต่าง (ลบ.)</td>';
   cumPlanned.forEach((v, i) => {
-    const show = i < MOCK_DATA.lastUpdatedMonth;
+    const show = i < globalData.lastUpdatedMonth;
     if (!show) { html += '<td>—</td>'; return; }
     const diff = cumActual[i] - v;
     const cls  = diff < 0 ? 'behind' : 'ahead';
@@ -333,11 +334,11 @@ async function init() {
   setLoading(true);
   try {
     const data = await fetchSheetData();
+    globalData = data;
     renderAll(data);
   } catch (err) {
-    console.warn('Google Sheet ไม่พร้อม — ใช้ mock data:', err);
-    document.getElementById('last-updated').textContent = '⚠ ใช้ข้อมูลตัวอย่าง (Sheet ยังไม่ได้ publish)';
-    // renderAll(MOCK_DATA); // uncomment เมื่อต้องการ fallback
+    console.warn('โหลดข้อมูลไม่ได้:', err);
+    document.getElementById('last-updated').textContent = '⚠ ไม่สามารถโหลดข้อมูลได้';
   }
 }
 
