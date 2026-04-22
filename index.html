@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard งบลงทุน ฝ่ายควบคุมระบบไฟฟ้า</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <header>
+    <div class="header-title">
+      <h1>รายงานผลงบประมาณลงทุน <span>ฝ่ายควบคุมระบบไฟฟ้า</span></h1>
+    </div>
+    <div class="header-meta">
+      <span id="last-updated">อัพเดต: —</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Sidebar: KPI summary -->
+    <aside class="sidebar">
+      <div class="card kpi-card">
+        <div class="kpi-label">เป้าจ่ายประจำปี 2569</div>
+        <div class="kpi-row">
+          <div class="kpi-item">
+            <div class="kpi-sublabel">เป้าจ่าย (Goal)</div>
+            <div class="kpi-value goal" id="kpi-goal">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-sublabel">จ่ายจริง (Result)</div>
+            <div class="kpi-value result" id="kpi-result">—</div>
+          </div>
+        </div>
+        <div class="kpi-diff" id="kpi-diff"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">เป้าจ่ายรวม (ลบ.)</div>
+        <canvas id="chart-donut" height="200"></canvas>
+        <div class="donut-legend" id="donut-legend"></div>
+      </div>
+
+      <div class="card info-card">
+        <div class="info-row">
+          <span class="info-label">เดือนที่อัพเดตล่าสุด</span>
+          <span class="info-value" id="info-month">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">ต่ำกว่าเป้าสะสม (ลบ.)</span>
+          <span class="info-value negative" id="info-behind">—</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <section class="content">
+
+      <!-- S-curve หลัก -->
+      <div class="card chart-card">
+        <div class="card-title">งบประมาณลงทุน ปี 2569 (สะสม)</div>
+        <canvas id="chart-scurve-main" height="110"></canvas>
+      </div>
+
+      <!-- กราฟรอง 2 กราฟ -->
+      <div class="sub-charts">
+        <div class="card chart-card">
+          <div class="card-title">งบประมาณลงทุนโครงการ (รายเดือน)</div>
+          <canvas id="chart-project" height="140"></canvas>
+        </div>
+        <div class="card chart-card">
+          <div class="card-title">งบประมาณลงทุนปกติ (รายเดือน)</div>
+          <canvas id="chart-normal" height="140"></canvas>
+        </div>
+      </div>
+
+      <!-- รายละเอียดโครงการ -->
+      <div class="card">
+        <div class="card-title">รายละเอียดโครงการ</div>
+        <div class="project-select-row">
+          <label for="project-select">เลือกโครงการ:</label>
+          <select id="project-select">
+            <option value="">— เลือกโครงการ —</option>
+          </select>
+        </div>
+        <div id="project-detail" class="project-detail hidden"></div>
+        <div id="project-table-wrap" class="hidden">
+          <div class="card-title" style="margin-top:1rem">เป้าจ่าย vs จ่ายจริง รายเดือน (สะสม)</div>
+          <div class="table-scroll">
+            <table id="project-monthly-table" class="monthly-table"></table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
