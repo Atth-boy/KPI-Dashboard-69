@@ -1,0 +1,145 @@
+var BUDGET_SHEET  = 'กรอกรายการงบประมาณ';
+var PLANNED_SHEET = 'งบประมาณ เป้า-จ่ายจริง';
+var SPREADSHEET_ID = '12tNI9JBrwubtRPmL9xFjKt_ncehe7NNF2EkOlBYKSkk';
+var FISCAL_YEAR_BE = 2569;
+
+// ลำดับเดือนปีงบประมาณไทย (0=ต.ค., 1=พ.ย., ..., 11=ก.ย.)
+var MONTH_ORDER = ['ต.ค.', 'พ.ย.', 'ธ.ค.', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.'];
+// ปี พ.ศ. 2 หลักของแต่ละ fiscal month (ต.ค.-ธ.ค. 68, ม.ค.-ก.ย. 69)
+var MONTH_YEAR  = ['68','68','68','69','69','69','69','69','69','69','69','69'];
+
+function doGet(e) {
+  var data = buildData();
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function buildData() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  var budgetRows  = getSheetValues(ss, BUDGET_SHEET);
+  var plannedRows = getSheetValues(ss, PLANNED_SHEET);
+
+  // ---- อ่านข้อมูลจาก planned sheet (Power BI style) ----
+  var monthlyMap = {};  // key = projNo, value = { planned:[12], actual:[12] }
+
+  plannedRows.forEach(function(r, idx) {
+    if (idx === 0) return;                            // ข้าม header
+    var pNo  = String(r[1] || '').trim();             // col B: หมายเลขโครงการ
+    var mStr = String(r[2] || '').trim();             // col C: เช่น "ต.ค. 68"
+    var plan = toFloat(r[3]);                         // col D: เป้าจ่าย (ลบ.)
+    var act  = toFloat(r[4]);                         // col E: จ่ายจริง (ลบ.)
+
+    if (!pNo || !mStr) return;
+    if (!monthlyMap[pNo]) {
+      monthlyMap[pNo] = { planned: Array(12).fill(0), actual: Array(12).fill(0) };
+    }
+
+    for (var m = 0; m < 12; m++) {
+      if (mStr.indexOf(MONTH_ORDER[m]) !== -1 && mStr.indexOf(MONTH_YEAR[m]) !== -1) {
+        monthlyMap[pNo].planned[m] = plan;
+        monthlyMap[pNo].actual[m]  = act;
+        break;
+      }
+    }
+  });
+
+  // ---- ประกอบโครงการ ----
+  var projects = [];
+  var lastUpdatedMonth = 0;
+
+  for (var i = 1; i < budgetRows.length; i++) {
+    var r    = budgetRows[i];
+    var name = String(r[0] || '').trim();
+    if (!name) continue;
+
+    var projNo = String(r[1] || '').trim();
+    var wbs    = String(r[2] || '').trim();
+    var budget = toFloat(r[3]);
+
+    var pData = monthlyMap[projNo];
+    var hasPlannedData = pData && pData.actual.some(function(v) { return v > 0; });
+
+    var actual, planned;
+
+    if (hasPlannedData) {
+      // ---- ใช้ข้อมูลจาก planned sheet ----
+      actual  = pData.actual;
+      planned = pData.planned;
+    } else {
+      // ---- fallback: อ่าน actual จาก budget sheet cols H-S (index 7-18) ----
+      // cols เก็บยอดจ่ายสะสม (บาท) เรียง ม.ค.-ธ.ค. (calendar year)
+      // ต้องแปลงเป็น fiscal month order (index 0=ต.ค., ..., 11=ก.ย.)
+      var calCum = [];
+      for (var m = 0; m < 12; m++) calCum.push(toFloat(r[7 + m]));
+
+      actual = Array(12).fill(0);
+      for (var cal = 0; cal < 12; cal++) {
+        var fm  = (cal + 3) % 12;   // ม.ค.(0)→fm3, ก.พ.(1)→fm4, ..., ต.ค.(9)→fm0
+        var inc = calCum[cal] - (cal > 0 ? calCum[cal - 1] : 0);
+        if (inc < 0) inc = 0;        // ห้ามติดลบ (ช่องที่ยังไม่กรอกข้อมูล)
+        actual[fm] = Math.round(inc / 1000000 * 1e6) / 1e6;
+      }
+      planned = pData ? pData.planned : Array(12).fill(0);
+    }
+
+    // หาเดือนล่าสุดที่มีข้อมูล
+    for (var m = 11; m >= 0; m--) {
+      if (actual[m] > 0) {
+        lastUpdatedMonth = Math.max(lastUpdatedMonth, m + 1);
+        break;
+      }
+    }
+
+    projects.push({
+      id:        i,
+      name:      name,
+      type:      wbs.startsWith('I/') ? 'ลงทุนโครงการ' : 'ลงทุนปกติ',
+      budget:    budget,
+      wbs:       wbs,
+      projNo:    projNo,
+      actual:    actual,
+      planned:   planned,
+      contract:  String(r[4] || '').trim() || '—',
+      startDate: formatDateBE(r[5]) || '—',
+      endDate:   formatDateBE(r[6]) || '—'
+    });
+  }
+
+  return {
+    year:             FISCAL_YEAR_BE,
+    lastUpdatedMonth: lastUpdatedMonth || 1,
+    projects:         projects,
+    plannedRowCount:  plannedRows.length   // debug: ดูว่า tab อ่านได้ไหม
+  };
+}
+
+// ---- ฟังก์ชันทดสอบ: รันใน Apps Script แล้วดู Log ----
+function testData() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  Logger.log('Sheets: ' + ss.getSheets().map(function(s){ return s.getName(); }).join(', '));
+
+  var rows = getSheetValues(ss, PLANNED_SHEET);
+  Logger.log('Planned rows: ' + rows.length);
+  rows.slice(0, 5).forEach(function(r, i) {
+    Logger.log('row ' + i + ': colB=' + r[1] + ' colC=' + r[2] + ' colD=' + r[3] + ' colE=' + r[4]);
+  });
+}
+
+function getSheetValues(ss, name) {
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) { Logger.log('Sheet not found: ' + name); return [[]]; }
+  return sheet.getDataRange().getValues();
+}
+
+function toFloat(v) {
+  if (v === '' || v === null || v === undefined) return 0;
+  return typeof v === 'number' ? v : parseFloat(String(v).replace(/,/g, '')) || 0;
+}
+
+function formatDateBE(v) {
+  if (!v || !(v instanceof Date)) return String(v || '').trim();
+  return pad(v.getDate()) + '/' + pad(v.getMonth() + 1) + '/' + (v.getFullYear() + 543);
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }

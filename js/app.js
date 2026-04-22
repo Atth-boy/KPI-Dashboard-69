@@ -1,4 +1,4 @@
-const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const MONTHS_TH = ['ต.ค.','พ.ย.','ธ.ค.','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.'];
 let globalData = null;
 const COLOR_GOAL    = '#71717a';   // gray-500
 const COLOR_ACTUAL  = '#f97316';   // orange
@@ -89,7 +89,9 @@ function renderMainSCurve(data) {
 
 function renderSubChart(canvasId, projects, type) {
   const { planned, actual } = buildMonthlyAggregates(projects, type);
-  const maskedActual = actual.map((v, i) => i < globalData.lastUpdatedMonth ? v : null);
+  const cumPlanned = cumulative(planned);
+  const cumActual  = cumulative(actual);
+  const maskedActual = cumActual.map((v, i) => i < globalData.lastUpdatedMonth ? v : null);
 
   const canvas = document.getElementById(canvasId);
   const ctx    = canvas.getContext('2d');
@@ -100,8 +102,8 @@ function renderSubChart(canvasId, projects, type) {
       labels: MONTHS_TH,
       datasets: [
         {
-          label: 'เป้าจ่าย (รายเดือน)',
-          data: planned,
+          label: 'เป้าจ่ายสะสม',
+          data: cumPlanned,
           borderColor: COLOR_GOAL,
           backgroundColor: gradientFill(ctx, COLOR_GOAL),
           borderWidth: 1.5,
@@ -115,7 +117,7 @@ function renderSubChart(canvasId, projects, type) {
           fill: true,
         },
         {
-          label: 'จ่ายจริง (รายเดือน)',
+          label: 'จ่ายจริงสะสม',
           data: maskedActual,
           borderColor: COLOR_ACTUAL,
           backgroundColor: gradientFill(ctx, COLOR_ACTUAL),

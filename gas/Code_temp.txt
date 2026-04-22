@@ -1,0 +1,148 @@
+﻿// ============================================================
+// KPI Dashboard — Google Apps Script
+// วิธี deploy:
+//   1. เปิด Google Sheet → Extensions → Apps Script
+//   2. วางโค้ดทั้งหมดนี้แทน Code.gs เดิม
+//   3. Deploy → New deployment
+//        - Type: Web app
+//        - Execute as: Me
+//        - Who has access: Anyone
+//   4. คลิก Deploy → Copy Web app URL
+//   5. ใส่ URL ใน js/data.js ที่ตัวแปร GAS_URL
+// ============================================================
+
+const BUDGET_SHEET   = 'กรอกรายการงบประมาณ';
+const PROGRESS_SHEET = 'กรอกเปอร์เซ็นงาน';
+const FISCAL_YEAR_BE = 2569;
+
+// entry point — browser จะ fetch URL นี้
+function doGet(e) {
+  const data = buildData();
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+const SPREADSHEET_ID = '12tNI9JBrwubtRPmL9xFjKt_ncehe7NNF2EkOlBYKSkk';
+
+// ── หลัก ─────────────────────────────────────────────────────
+function buildData() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  const budgetRows   = getSheetValues(ss, BUDGET_SHEET);
+  const progressRows = getSheetValues(ss, PROGRESS_SHEET);
+
+  const progressMap = buildProgressMap(progressRows);
+
+  const projects = [];
+  let lastUpdatedMonth = 0;
+
+  // วนทุก row ของ budget (เริ่ม i=1 ข้าม header)
+  for (let i = 1; i < budgetRows.length; i++) {
+    const r    = budgetRows[i];
+    const name = String(r[0] || '').trim();
+    if (!name) continue;               // ข้าม row สรุปหรือว่าง
+
+    const wbs    = String(r[2] || '').trim();
+    const budget = toFloat(r[3]);      // เป้าจ่ายรวม (ลบ.)
+
+    // cols 7-18 = ม.ค.-ธ.ค. เป็นยอดสะสม (บาท)
+    const cumBaht = [];
+    for (let m = 0; m < 12; m++) cumBaht.push(toFloat(r[7 + m]));
+
+    // แปลงเป็น monthly increment (ลบ.)
+    const actual = cumBaht.map((v, m) =>
+      round6((v - (m > 0 ? cumBaht[m - 1] : 0)) / 1000000)
+    );
+
+    // หาเดือนล่าสุดที่มีข้อมูล
+    for (let m = 11; m >= 0; m--) {
+      if (cumBaht[m] > 0) { lastUpdatedMonth = Math.max(lastUpdatedMonth, m + 1); break; }
+    }
+
+    const startDate = formatDateBE(r[5]);
+    const endDate   = formatDateBE(r[6]);
+
+    projects.push({
+      id:        i,
+      name,
+      type:      wbs.startsWith('I/') ? 'ลงทุนโครงการ' : 'ลงทุนปกติ',
+      budget,
+      wbs,
+      contract:  String(r[4] || '').trim() || '—',
+      startDate: startDate || '—',
+      endDate:   endDate   || '—',
+      actual,
+      progress:  progressMap[wbs] || Array(12).fill(null),
+    });
+  }
+
+  return {
+    year:              FISCAL_YEAR_BE,
+    lastUpdatedMonth:  lastUpdatedMonth || 1,
+    projects,
+  };
+}
+
+// ── progress map: wbs → [%_ม.ค., ..., %_ธ.ค.] ──────────────
+function buildProgressMap(rows) {
+  const map = {};
+  for (let i = 1; i < rows.length; i++) {
+    const r   = rows[i];
+    const wbs = String(r[1] || '').trim();
+    if (!wbs) continue;
+
+    map[wbs] = Array.from({ length: 12 }, (_, m) => {
+      const v = r[m + 2];
+      if (v === '' || v === null || v === undefined) return null;
+      // Sheets เก็บ % format เป็น decimal (0.5394 = 53.94%)
+      const num = typeof v === 'number' ? v : parseFloat(String(v).replace('%', ''));
+      if (isNaN(num)) return null;
+      return num <= 1 ? round2(num * 100) : round2(num); // normalize เป็น 0-100
+    });
+  }
+  return map;
+}
+
+// ── helpers ──────────────────────────────────────────────────
+function getSheetValues(ss, name) {
+  const sheet = ss.getSheetByName(name);
+  if (!sheet) return [];
+  return sheet.getDataRange().getValues();
+}
+
+function toFloat(v) {
+  if (v === '' || v === null || v === undefined) return 0;
+  if (typeof v === 'number') return v;
+  return parseFloat(String(v).replace(/,/g, '')) || 0;
+}
+
+// แปลง Date object หรือ string → "DD/MM/YYYY_BE"
+function formatDateBE(v) {
+  if (!v) return '';
+  if (v instanceof Date) {
+    const d = v.getDate();
+    const m = v.getMonth() + 1;
+    const y = v.getFullYear() + 543;   // CE → BE
+    return `${pad(d)}/${pad(m)}/${y}`;
+  }
+  return String(v).trim();
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+function round6(n) { return Math.round(n * 1e6) / 1e6; }
+function round2(n) { return Math.round(n * 100) / 100; }
+
+// ── ฟังก์ชันทดสอบ — รันใน Apps Script แล้วดู Execution log ──
+function testData() {
+  const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheets = ss.getSheets().map(s => s.getName());
+  Logger.log('Sheet ที่เจอทั้งหมด: ' + JSON.stringify(sheets));
+
+  const data = buildData();
+  Logger.log('จำนวนโครงการที่พบ: ' + data.projects.length);
+  Logger.log('lastUpdatedMonth: ' + data.lastUpdatedMonth);
+  if (data.projects.length > 0) {
+    Logger.log('โครงการแรก: ' + JSON.stringify(data.projects[0]));
+  }
+}

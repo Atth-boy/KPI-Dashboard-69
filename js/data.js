@@ -1,37 +1,14 @@
-// ── ใส่ URL จาก Apps Script Deploy ตรงนี้ ──────────────────────
-// วิธีได้ URL: ดู gas/Code.gs → ทำตามขั้นตอน deploy → copy URL
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzGy8rnJVZdTBcizH83D0e96j1GXZdDHdQd-rui-HO5kyxjAFSW2htviUFh8IAm4sSx/exec';
 
 const FISCAL_YEAR_BE = 2569;
 const FISCAL_YEAR_CE = 2026;
-
-// ── CSV parser (handles quoted fields) ──────────────────────────────
-function parseCSV(text) {
-  const rows = [];
-  for (const line of text.split('\n')) {
-    if (!line.trim()) continue;
-    const row = []; let inQ = false, field = '';
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c === '"' && !inQ)           { inQ = true; }
-      else if (c === '"' && inQ) {
-        if (line[i + 1] === '"')       { field += '"'; i++; }
-        else                            { inQ = false; }
-      } else if (c === ',' && !inQ)   { row.push(field); field = ''; }
-      else                             { field += c; }
-    }
-    row.push(field);
-    rows.push(row);
-  }
-  return rows;
-}
 
 function parseNum(s) {
   if (!s) return 0;
   return parseFloat(s.replace(/,/g, '')) || 0;
 }
 
-// "DD/MM/YYYY_BE"  →  { month: 0-based, year: CE }
+// "DD/MM/YYYY_BE" → { month: 0-based gregorian, year: CE }
 function parseDateBE(s) {
   if (!s || !s.includes('/')) return null;
   const [d, m, y] = s.trim().split('/').map(Number);
@@ -39,38 +16,35 @@ function parseDateBE(s) {
   return { month: m - 1, year: y - 543 };
 }
 
-// กระจายงบเท่าๆ กันตามวันสัญญา (linear distribution)
+// กระจายงบตามวันสัญญา — ใช้ลำดับ fiscal month (index 0 = ต.ค.)
+// fiscal month m → gregorian: m<=2 → year CE-1, greg=9+m; m>=3 → year CE, greg=m-3
 function calcPlanned(budget, startStr, endStr) {
   const planned = Array(12).fill(0);
   const start = parseDateBE(startStr);
   const end   = parseDateBE(endStr);
 
-  if (!start || !end) {
-    // ไม่มีวันสัญญา: กระจายเท่ากัน 12 เดือน
-    return planned.fill(+(budget / 12).toFixed(6));
-  }
+  if (!start || !end) return planned.fill(+(budget / 12).toFixed(6));
 
-  // จำนวนเดือนทั้งหมดของสัญญา
   const totalMonths = Math.max(1,
     (end.year - start.year) * 12 + (end.month - start.month) + 1
   );
   const perMonth = budget / totalMonths;
 
-  for (let m = 0; m < 12; m++) {
-    const afterStart = FISCAL_YEAR_CE > start.year ||
-                      (FISCAL_YEAR_CE === start.year && m >= start.month);
-    const beforeEnd  = FISCAL_YEAR_CE < end.year   ||
-                      (FISCAL_YEAR_CE === end.year  && m <= end.month);
-    if (afterStart && beforeEnd) planned[m] = +perMonth.toFixed(6);
+  for (let fm = 0; fm < 12; fm++) {
+    // แปลง fiscal month → CE year + gregorian month
+    const yr   = fm <= 2 ? FISCAL_YEAR_CE - 1 : FISCAL_YEAR_CE;
+    const greg = fm <= 2 ? 9 + fm              : fm - 3;
+
+    const mAbs     = yr * 12 + greg;
+    const startAbs = start.year * 12 + start.month;
+    const endAbs   = end.year   * 12 + end.month;
+
+    if (mAbs >= startAbs && mAbs <= endAbs) planned[fm] = +perMonth.toFixed(6);
   }
   return planned;
 }
 
-function inferType(wbs) {
-  return (wbs || '').startsWith('I/') ? 'ลงทุนโครงการ' : 'ลงทุนปกติ';
-}
-
-// ── Fetch จาก GAS ────────────────────────────────────────────────────
+// ── Fetch จาก GAS ──────────────────────────────────────────────
 async function fetchSheetData() {
   if (!GAS_URL) throw new Error('ยังไม่ได้ใส่ GAS_URL');
 
@@ -79,15 +53,18 @@ async function fetchSheetData() {
 
   const json = await res.json();
 
-  // เพิ่ม planned ที่คำนวณจากวันสัญญา (GAS ไม่ส่งมา)
+  // ถ้า GAS ไม่ส่ง planned มา (หรือเป็น 0 ทั้งหมด) ให้คำนวณจากวันสัญญาแทน
   json.projects.forEach(p => {
-    p.planned = calcPlanned(p.budget, p.startDate, p.endDate);
+    if (!p.planned || !p.planned.some(v => v > 0)) {
+      p.planned = calcPlanned(p.budget, p.startDate, p.endDate);
+    }
+    if (!p.actual) p.actual = Array(12).fill(0);
   });
 
   return json;
 }
 
-// ── Summary ──────────────────────────────────────────────────────────
+// ── Summary ────────────────────────────────────────────────────
 function computeSummary(data) {
   let totalBudgetProject = 0, totalBudgetNormal = 0;
   let totalActual = 0, plannedToNow = 0;
