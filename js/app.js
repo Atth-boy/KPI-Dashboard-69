@@ -312,17 +312,33 @@ function renderMonthlyTable(p) {
   document.getElementById('project-monthly-table').innerHTML = html;
 }
 
-// ---- Init ----
-function init() {
-  const data    = MOCK_DATA;
-  const summary = computeSummary(data);
+// ---- Loading state ----
+function setLoading(on) {
+  document.getElementById('last-updated').textContent = on ? 'กำลังโหลดข้อมูล...' : '';
+}
 
+// ---- Render all ----
+function renderAll(data) {
+  const summary = computeSummary(data);
   renderKPI(summary, data);
   renderDonut(summary.totalBudgetProject, summary.totalBudgetNormal);
   renderMainSCurve(data);
   renderSubChart('chart-project', data.projects, 'ลงทุนโครงการ');
   renderSubChart('chart-normal',  data.projects, 'ลงทุนปกติ');
   populateProjectSelect(data.projects);
+}
+
+// ---- Init ----
+async function init() {
+  setLoading(true);
+  try {
+    const data = await fetchSheetData();
+    renderAll(data);
+  } catch (err) {
+    console.warn('Google Sheet ไม่พร้อม — ใช้ mock data:', err);
+    document.getElementById('last-updated').textContent = '⚠ ใช้ข้อมูลตัวอย่าง (Sheet ยังไม่ได้ publish)';
+    // renderAll(MOCK_DATA); // uncomment เมื่อต้องการ fallback
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);

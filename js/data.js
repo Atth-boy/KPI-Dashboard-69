@@ -1,143 +1,112 @@
-// ====================================================
-// CONFIG: ใส่ URL ของ Google Sheet ที่ publish เป็น CSV
-// File > Share > Publish to web > เลือก tab > CSV > copy URL
-// ====================================================
-const SHEET_CONFIG = {
-  // tab: กรอกรายงานงบประมาณ
-  budget_url: '',
-  // tab: กรอกเปอร์เซ็นงาน
-  progress_url: '',
-};
+// ── ใส่ URL จาก Apps Script Deploy ตรงนี้ ──────────────────────
+// วิธีได้ URL: ดู gas/Code.gs → ทำตามขั้นตอน deploy → copy URL
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzGy8rnJVZdTBcizH83D0e96j1GXZdDHdQd-rui-HO5kyxjAFSW2htviUFh8IAm4sSx/exec';
 
-// ====================================================
-// MOCK DATA — ใช้จนกว่าจะเชื่อม Google Sheet
-// โครงสร้างตรงกับ Excel "เก็บข้อมูลค่าใช้จ่ายโครงการ กสฟ."
-// ====================================================
-const MOCK_DATA = {
-  year: 2569,
-  lastUpdatedMonth: 3, // มี.ค. = 3
+const FISCAL_YEAR_BE = 2569;
+const FISCAL_YEAR_CE = 2026;
 
-  projects: [
-    {
-      id: 1,
-      name: 'ค่าจ้างออกแบบศูนย์รักษาความปลอดภัยสถานีไฟฟ้า บางรักใหญ่',
-      type: 'ลงทุนปกติ',
-      budget: 0.430,
-      wbs: 'P-6801',
-      contract: 'สญ.6801-001',
-      startDate: '01/01/2568',
-      endDate: '31/12/2568',
-      planned: [0.040, 0.040, 0.060, 0.060, 0.040, 0.040, 0.040, 0.040, 0.030, 0.020, 0.010, 0.010],
-      actual:  [0.038, 0.040, 0.058, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
-      progress:[10, 20, 30, null, null, null, null, null, null, null, null, null],
-    },
-    {
-      id: 2,
-      name: 'งานปรับปรุงระบบส่งน้ำประปาที่อาคารสถานีต้นทางยิ่งดล',
-      type: 'ลงทุนปกติ',
-      budget: 1.864,
-      wbs: 'P-6802',
-      contract: 'สญ.6802-001',
-      startDate: '01/02/2568',
-      endDate: '30/09/2568',
-      planned: [0.000, 0.150, 0.200, 0.250, 0.300, 0.280, 0.250, 0.200, 0.184, 0.000, 0.000, 0.000],
-      actual:  [0.000, 0.140, 0.195, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
-      progress:[null, 8, 18, null, null, null, null, null, null, null, null, null],
-    },
-    {
-      id: 3,
-      name: 'คู่อคอนแทนเนอร์พร้อมดกแต่งภายในและระบบที่เกี่ยวข้อง สำหรับงานศูนย์สั่งการระบบไฟฟ้า',
-      type: 'ลงทุนปกติ',
-      budget: 2.000,
-      wbs: 'P-6803',
-      contract: 'สญ.6803-001',
-      startDate: '01/01/2568',
-      endDate: '31/10/2568',
-      planned: [0.100, 0.150, 0.200, 0.250, 0.300, 0.280, 0.250, 0.200, 0.150, 0.120, 0.000, 0.000],
-      actual:  [0.095, 0.145, 0.198, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
-      progress:[5, 13, 23, null, null, null, null, null, null, null, null, null],
-    },
-    {
-      id: 4,
-      name: 'ถังเก็บน้ำ ขนาด 1,500 ลิตร',
-      type: 'ลงทุนปกติ',
-      budget: 0.495,
-      wbs: 'P-6804',
-      contract: 'สญ.6804-001',
-      startDate: '01/01/2568',
-      endDate: '30/06/2568',
-      planned: [0.100, 0.100, 0.100, 0.100, 0.050, 0.045, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
-      actual:  [0.098, 0.098, 0.097, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
-      progress:[20, 40, 60, null, null, null, null, null, null, null, null, null],
-    },
-    {
-      id: 5,
-      name: 'โครงการปรับปรุงระบบจำหน่ายแรงสูง เขตนนทบุรี ระยะที่ 2',
-      type: 'ลงทุนโครงการ',
-      budget: 45.200,
-      wbs: 'P-6901',
-      contract: 'สญ.6901-001',
-      startDate: '01/01/2569',
-      endDate: '31/12/2569',
-      planned: [2.500, 3.000, 4.000, 5.000, 5.500, 5.500, 5.000, 4.500, 4.000, 3.500, 2.200, 0.500],
-      actual:  [2.400, 2.900, 3.850, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
-      progress:[5, 12, 20, null, null, null, null, null, null, null, null, null],
-    },
-    {
-      id: 6,
-      name: 'โครงการก่อสร้างสถานีไฟฟ้าย่อยบางนา',
-      type: 'ลงทุนโครงการ',
-      budget: 68.500,
-      wbs: 'P-6902',
-      contract: 'สญ.6902-001',
-      startDate: '01/01/2569',
-      endDate: '31/12/2570',
-      planned: [3.000, 4.000, 5.000, 6.000, 7.000, 7.000, 6.500, 6.000, 5.500, 5.000, 4.000, 3.500],
-      actual:  [2.850, 3.900, 4.800, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
-      progress:[4, 10, 17, null, null, null, null, null, null, null, null, null],
-    },
-    {
-      id: 7,
-      name: 'โครงการติดตั้งสายเคเบิลใต้ดิน ถนนพหลโยธิน',
-      type: 'ลงทุนโครงการ',
-      budget: 31.684,
-      wbs: 'P-6903',
-      contract: 'สญ.6903-001',
-      startDate: '01/02/2569',
-      endDate: '30/09/2569',
-      planned: [0.000, 2.000, 3.500, 4.500, 5.500, 5.500, 5.000, 5.184, 0.000, 0.000, 0.000, 0.000],
-      actual:  [0.000, 1.950, 3.400, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
-      progress:[null, 6, 17, null, null, null, null, null, null, null, null, null],
-    },
-  ],
-};
+// ── CSV parser (handles quoted fields) ──────────────────────────────
+function parseCSV(text) {
+  const rows = [];
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue;
+    const row = []; let inQ = false, field = '';
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"' && !inQ)           { inQ = true; }
+      else if (c === '"' && inQ) {
+        if (line[i + 1] === '"')       { field += '"'; i++; }
+        else                            { inQ = false; }
+      } else if (c === ',' && !inQ)   { row.push(field); field = ''; }
+      else                             { field += c; }
+    }
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
 
-// คำนวณข้อมูลสรุปจาก MOCK_DATA
-function computeSummary(data) {
-  const months = data.lastUpdatedMonth;
-  let totalPlannedAll = 0, totalActualAll = 0;
-  let totalBudgetProject = 0, totalBudgetNormal = 0;
+function parseNum(s) {
+  if (!s) return 0;
+  return parseFloat(s.replace(/,/g, '')) || 0;
+}
 
-  data.projects.forEach(p => {
-    const budget = p.budget;
-    if (p.type === 'ลงทุนโครงการ') totalBudgetProject += budget;
-    else totalBudgetNormal += budget;
+// "DD/MM/YYYY_BE"  →  { month: 0-based, year: CE }
+function parseDateBE(s) {
+  if (!s || !s.includes('/')) return null;
+  const [d, m, y] = s.trim().split('/').map(Number);
+  if (!d || !m || !y) return null;
+  return { month: m - 1, year: y - 543 };
+}
 
-    p.planned.forEach(v => totalPlannedAll += v);
-    for (let i = 0; i < months; i++) totalActualAll += (p.actual[i] || 0);
+// กระจายงบเท่าๆ กันตามวันสัญญา (linear distribution)
+function calcPlanned(budget, startStr, endStr) {
+  const planned = Array(12).fill(0);
+  const start = parseDateBE(startStr);
+  const end   = parseDateBE(endStr);
+
+  if (!start || !end) {
+    // ไม่มีวันสัญญา: กระจายเท่ากัน 12 เดือน
+    return planned.fill(+(budget / 12).toFixed(6));
+  }
+
+  // จำนวนเดือนทั้งหมดของสัญญา
+  const totalMonths = Math.max(1,
+    (end.year - start.year) * 12 + (end.month - start.month) + 1
+  );
+  const perMonth = budget / totalMonths;
+
+  for (let m = 0; m < 12; m++) {
+    const afterStart = FISCAL_YEAR_CE > start.year ||
+                      (FISCAL_YEAR_CE === start.year && m >= start.month);
+    const beforeEnd  = FISCAL_YEAR_CE < end.year   ||
+                      (FISCAL_YEAR_CE === end.year  && m <= end.month);
+    if (afterStart && beforeEnd) planned[m] = +perMonth.toFixed(6);
+  }
+  return planned;
+}
+
+function inferType(wbs) {
+  return (wbs || '').startsWith('I/') ? 'ลงทุนโครงการ' : 'ลงทุนปกติ';
+}
+
+// ── Fetch จาก GAS ────────────────────────────────────────────────────
+async function fetchSheetData() {
+  if (!GAS_URL) throw new Error('ยังไม่ได้ใส่ GAS_URL');
+
+  const res = await fetch(GAS_URL);
+  if (!res.ok) throw new Error(`GAS ตอบ ${res.status}`);
+
+  const json = await res.json();
+
+  // เพิ่ม planned ที่คำนวณจากวันสัญญา (GAS ไม่ส่งมา)
+  json.projects.forEach(p => {
+    p.planned = calcPlanned(p.budget, p.startDate, p.endDate);
   });
 
-  // เป้าสะสมถึงเดือนปัจจุบัน
-  let cumulativePlannedToNow = 0;
+  return json;
+}
+
+// ── Summary ──────────────────────────────────────────────────────────
+function computeSummary(data) {
+  let totalBudgetProject = 0, totalBudgetNormal = 0;
+  let totalActual = 0, plannedToNow = 0;
+
   data.projects.forEach(p => {
-    for (let i = 0; i < months; i++) cumulativePlannedToNow += (p.planned[i] || 0);
+    if (p.type === 'ลงทุนโครงการ') totalBudgetProject += p.budget;
+    else                             totalBudgetNormal  += p.budget;
+
+    for (let i = 0; i < data.lastUpdatedMonth; i++) {
+      totalActual  += (p.actual[i]  || 0);
+      plannedToNow += (p.planned[i] || 0);
+    }
   });
 
   return {
     totalBudget: totalBudgetProject + totalBudgetNormal,
     totalBudgetProject,
     totalBudgetNormal,
-    totalActual: totalActualAll,
-    behind: cumulativePlannedToNow - totalActualAll,
+    totalActual,
+    behind: plannedToNow - totalActual,
   };
 }

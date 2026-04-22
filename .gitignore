@@ -2,9 +2,11 @@
 *.xlsx
 *.xls
 *.csv
+ความต้องการ.txt
 
-# Documentation ภายใน (local only)
+# Documentation และ script ภายใน (local only)
 CLAUDE.md
+gas/
 
 # Dependencies
 node_modules/
