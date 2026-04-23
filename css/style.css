@@ -172,6 +172,8 @@ main {
   margin-bottom: 0.75rem;
 }
 .detail-item { display: flex; flex-direction: column; gap: 0.15rem; }
+.detail-item--full { grid-column: 1 / -1; }
+.detail-contract-row { grid-column: 1 / -1; display: flex; gap: 1.5rem; flex-wrap: wrap; }
 .detail-label { font-size: 0.67rem; color: var(--gray-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 .detail-value { font-size: 0.88rem; font-weight: 700; color: var(--gray-900); }
 

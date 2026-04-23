@@ -279,19 +279,34 @@ function populateProjectSelect(projects) {
 function renderProjectDetail(p) {
   const el = document.getElementById('project-detail');
   el.classList.remove('hidden');
-  el.innerHTML = [
-    { label: 'ประเภท',          value: p.type },
-    { label: 'งบ (ลบ.)',        value: p.budget.toFixed(3) },
-    { label: 'เลข WBS',         value: p.wbs },
-    { label: 'เลขที่สัญญา',     value: p.contract },
-    { label: 'วันเริ่มสัญญา',   value: p.startDate },
-    { label: 'วันสิ้นสุดสัญญา', value: p.endDate },
-  ].map(item =>
-    `<div class="detail-item">
-      <div class="detail-label">${item.label}</div>
-      <div class="detail-value">${item.value}</div>
-    </div>`
-  ).join('');
+  el.innerHTML = `
+    <div class="detail-item">
+      <div class="detail-label">ประเภท</div>
+      <div class="detail-value">${p.type}</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">งบ (ลบ.)</div>
+      <div class="detail-value">${p.budget.toFixed(3)}</div>
+    </div>
+    <div class="detail-contract-row">
+      <div class="detail-item">
+        <div class="detail-label">เลขที่สัญญา</div>
+        <div class="detail-value">${p.contract}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">วันเริ่มสัญญา</div>
+        <div class="detail-value">${p.startDate}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">วันสิ้นสุดสัญญา</div>
+        <div class="detail-value">${p.endDate}</div>
+      </div>
+    </div>
+    <div class="detail-item detail-item--full">
+      <div class="detail-label">เลข WBS</div>
+      <div class="detail-value">${p.wbs}</div>
+    </div>
+  `;
 }
 
 function renderMonthlyTable(p) {
