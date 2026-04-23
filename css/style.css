@@ -347,6 +347,17 @@ main {
   /* Project detail */
   .project-detail { grid-template-columns: 1fr 1fr; }
   .detail-contract-row { flex-direction: column; gap: 0.5rem; }
+
+  /* ตาราง tablet เหมือนมือถือ: swipe + ซ่อน column รายการ */
+  .table-desktop { display: none; }
+  .table-swipe { display: flex; }
+  .swipe-dots { display: flex; }
+  .table-row-legend { display: flex; }
+  .monthly-table { font-size: 0.72rem; }
+  .monthly-table th { padding: 0.3rem 0.25rem; }
+  .monthly-table td { padding: 0.25rem 0.25rem; }
+  .table-panel .monthly-table th:first-child,
+  .table-panel .monthly-table .row-label { display: none; }
 }
 
 @media (max-width: 540px) {
@@ -383,17 +394,10 @@ main {
   /* ป้องกัน canvas overflow */
   canvas { max-width: 100% !important; }
 
-  /* สลับ PC → Mobile */
-  .table-desktop { display: none; }
-  .table-swipe { display: flex; }
-  .swipe-dots { display: flex; }
-  .table-row-legend { display: flex; }
-  /* บีบตารางให้จุ 6 เดือนพอดีจอ + ซ่อน column รายการ */
+  /* บีบตารางเพิ่มบนมือถือ */
   .monthly-table { font-size: 0.62rem; }
   .monthly-table th { padding: 0.28rem 0.18rem; }
   .monthly-table td { padding: 0.22rem 0.18rem; }
-  .table-panel .monthly-table th:first-child,
-  .table-panel .monthly-table .row-label { display: none; }
 
   /* Card */
   .card { padding: 0.75rem 0.85rem; }
