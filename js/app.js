@@ -278,7 +278,9 @@ function populateProjectSelect(projects) {
         renderList(search.value);
         renderProjectDetail(p);
         renderMonthlyTable(p);
-        document.getElementById('project-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (window.innerWidth > 540) {
+          document.getElementById('project-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
       });
       list.appendChild(item);
     });
