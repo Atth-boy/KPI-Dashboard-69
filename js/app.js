@@ -288,6 +288,10 @@ function renderProjectDetail(p) {
       <div class="detail-label">งบ (ลบ.)</div>
       <div class="detail-value">${p.budget.toFixed(3)}</div>
     </div>
+    <div class="detail-item">
+      <div class="detail-label">เลข WBS</div>
+      <div class="detail-value">${p.wbs}</div>
+    </div>
     <div class="detail-contract-row">
       <div class="detail-item">
         <div class="detail-label">เลขที่สัญญา</div>
@@ -301,10 +305,6 @@ function renderProjectDetail(p) {
         <div class="detail-label">วันสิ้นสุดสัญญา</div>
         <div class="detail-value">${p.endDate}</div>
       </div>
-    </div>
-    <div class="detail-item detail-item--full">
-      <div class="detail-label">เลข WBS</div>
-      <div class="detail-value">${p.wbs}</div>
     </div>
   `;
 }
