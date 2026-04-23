@@ -1,12 +1,8 @@
-var BUDGET_SHEET  = 'กรอกรายการงบประมาณ';
-var PLANNED_SHEET = 'งบประมาณ เป้า-จ่ายจริง';
+var BUDGET_SHEET   = 'กรอกรายการงบประมาณ';
+var PLANNED_SHEET  = 'งบประมาณ เป้า-จ่ายจริง';
 var SPREADSHEET_ID = '12tNI9JBrwubtRPmL9xFjKt_ncehe7NNF2EkOlBYKSkk';
 var FISCAL_YEAR_BE = 2569;
-
-// ลำดับเดือนปีงบประมาณไทย (0=ต.ค., 1=พ.ย., ..., 11=ก.ย.)
-var MONTH_ORDER = ['ต.ค.', 'พ.ย.', 'ธ.ค.', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.'];
-// ปี พ.ศ. 2 หลักของแต่ละ fiscal month (ต.ค.-ธ.ค. 68, ม.ค.-ก.ย. 69)
-var MONTH_YEAR  = ['68','68','68','69','69','69','69','69','69','69','69','69'];
+var FISCAL_YEAR_CE = FISCAL_YEAR_BE - 543;  // 2026
 
 function doGet(e) {
   var data = buildData();
@@ -24,24 +20,27 @@ function buildData() {
   var monthlyMap = {};  // key = projNo, value = { planned:[12], actual:[12] }
 
   plannedRows.forEach(function(r, idx) {
-    if (idx === 0) return;                            // ข้าม header
-    var pNo  = String(r[1] || '').trim();             // col B: หมายเลขโครงการ
-    var mStr = String(r[2] || '').trim();             // col C: เช่น "ต.ค. 68"
-    var plan = toFloat(r[3]);                         // col D: เป้าจ่าย (ลบ.)
-    var act  = toFloat(r[4]);                         // col E: จ่ายจริง (ลบ.)
+    if (idx === 0) return;                   // ข้าม header
+    var pNo     = String(r[1] || '').trim(); // col B: หมายเลขโครงการ
+    var dateVal = r[2];                      // col C: Date object จาก Sheets
+    var plan    = toFloat(r[3]);             // col D: เป้าจ่าย (ลบ.)
+    var act     = toFloat(r[4]);             // col E: จ่ายจริง (ลบ.)
 
-    if (!pNo || !mStr) return;
+    if (!pNo || !(dateVal instanceof Date)) return;
+
+    // แปลง Date → fiscal month index (0=ต.ค., ..., 11=ก.ย.)
+    var greg = dateVal.getMonth();           // 0-based gregorian month
+    var yr   = dateVal.getFullYear();
+    // ตรวจว่าอยู่ในปีงบประมาณนี้
+    var expectedYear = (greg >= 9) ? FISCAL_YEAR_CE - 1 : FISCAL_YEAR_CE;
+    if (yr !== expectedYear) return;
+    var fm = (greg + 3) % 12;               // ม.ค.(0)→3, ต.ค.(9)→0
+
     if (!monthlyMap[pNo]) {
       monthlyMap[pNo] = { planned: Array(12).fill(0), actual: Array(12).fill(0) };
     }
-
-    for (var m = 0; m < 12; m++) {
-      if (mStr.indexOf(MONTH_ORDER[m]) !== -1 && mStr.indexOf(MONTH_YEAR[m]) !== -1) {
-        monthlyMap[pNo].planned[m] = plan;
-        monthlyMap[pNo].actual[m]  = act;
-        break;
-      }
-    }
+    monthlyMap[pNo].planned[fm] = plan;
+    monthlyMap[pNo].actual[fm]  = act;
   });
 
   // ---- ประกอบโครงการ ----
@@ -109,8 +108,7 @@ function buildData() {
   return {
     year:             FISCAL_YEAR_BE,
     lastUpdatedMonth: lastUpdatedMonth || 1,
-    projects:         projects,
-    plannedRowCount:  plannedRows.length   // debug: ดูว่า tab อ่านได้ไหม
+    projects:         projects
   };
 }
 
