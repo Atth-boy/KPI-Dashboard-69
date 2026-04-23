@@ -18,6 +18,7 @@ function buildData() {
 
   // ---- อ่านข้อมูลจาก planned sheet (Power BI style) ----
   var monthlyMap = {};  // key = projNo, value = { planned:[12], actual:[12] }
+  var monthDays  = {}; // cal index → วันที่จาก col C (เก็บไว้แสดง "ณ วันที่ XX")
 
   plannedRows.forEach(function(r, idx) {
     if (idx === 0) return;                   // ข้าม header
@@ -38,6 +39,7 @@ function buildData() {
     }
     monthlyMap[pNo].planned[cal] += plan;
     monthlyMap[pNo].actual[cal]  += act;
+    monthDays[cal] = dateVal.getDate(); // เก็บวันที่ของเดือนนี้
   });
 
   // ---- ประกอบโครงการ ----
@@ -104,6 +106,7 @@ function buildData() {
   return {
     year:             FISCAL_YEAR_BE,
     lastUpdatedMonth: lastUpdatedMonth || 1,
+    lastUpdatedDay:   monthDays[(lastUpdatedMonth || 1) - 1] || 0,
     projects:         projects
   };
 }

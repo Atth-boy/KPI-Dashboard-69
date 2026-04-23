@@ -235,9 +235,9 @@ function renderKPI(summary, data) {
     summary.behind > 0 ? `ต่ำกว่าเป้าสะสม ${summary.behind.toFixed(3)} ลบ.` : '';
   document.getElementById('last-updated').textContent = 'อัพเดต: ' + monthLabel;
 
-  // หาวันสุดท้ายของเดือนข้อมูลล่าสุด
+  // วันที่มาจาก col C ของ planned sheet (ถ้าไม่มีให้ใช้วันสุดท้ายของเดือน)
   const ceYear  = data.year - 543;
-  const lastDay = new Date(ceYear, data.lastUpdatedMonth, 0).getDate();
+  const lastDay = data.lastUpdatedDay || new Date(ceYear, data.lastUpdatedMonth, 0).getDate();
   const dayLabel = `ณ วันที่ ${lastDay} ${MONTHS_TH[data.lastUpdatedMonth - 1]} ${data.year}`;
 
   // สถานะการจ่าย (ปัจจุบัน)
