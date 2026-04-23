@@ -23,7 +23,7 @@ function calcPlanned(budget, startStr, endStr) {
   const start = parseDateBE(startStr);
   const end   = parseDateBE(endStr);
 
-  if (!start || !end) return planned.fill(+(budget / 12).toFixed(6));
+  if (!start || !end) return planned;  // ไม่มีวันสัญญา → ไม่คำนวณ
 
   const totalMonths = Math.max(1,
     (end.year - start.year) * 12 + (end.month - start.month) + 1
