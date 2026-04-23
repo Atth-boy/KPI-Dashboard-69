@@ -231,10 +231,10 @@ function renderKPI(summary, data) {
   document.getElementById('kpi-result').textContent = summary.totalActual.toFixed(3);
   document.getElementById('kpi-diff').textContent   =
     summary.behind > 0 ? `ต่ำกว่าเป้าสะสม ${summary.behind.toFixed(3)} ลบ.` : '';
-  document.getElementById('info-month').textContent = MONTHS_TH[data.lastUpdatedMonth - 1] + '/' + (data.year + 543);
+  document.getElementById('info-month').textContent = MONTHS_TH[data.lastUpdatedMonth - 1] + '/' + data.year;
   document.getElementById('info-behind').textContent = summary.behind.toFixed(3);
   document.getElementById('last-updated').textContent =
-    'อัพเดต: ' + MONTHS_TH[data.lastUpdatedMonth - 1] + ' ' + (data.year + 543);
+    'อัพเดต: ' + MONTHS_TH[data.lastUpdatedMonth - 1] + ' ' + data.year;
 }
 
 // ---- Project dropdown ----
