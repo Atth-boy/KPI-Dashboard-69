@@ -212,7 +212,7 @@ main {
 }
 .project-list-item:last-child { border-bottom: none; }
 .project-list-item:hover { background: var(--orange-light); }
-.project-list-item.active { background: var(--orange-light); font-weight: 700; color: var(--orange-dark); }
+.project-list-item.active { background: var(--orange-light); }
 .project-list-empty { padding: 0.6rem 0.75rem; font-size: 0.83rem; color: var(--gray-500); }
 
 .project-detail {
