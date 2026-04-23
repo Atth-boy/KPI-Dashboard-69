@@ -49,12 +49,16 @@ async function fetchSheetData() {
 
   const json = await res.json();
 
-  // ถ้า GAS ไม่ส่ง planned มา (หรือเป็น 0 ทั้งหมด) ให้คำนวณจากวันสัญญาแทน
+  if (!Array.isArray(json.projects)) throw new Error('GAS ไม่ส่ง projects มา');
+  if (typeof json.lastUpdatedMonth !== 'number') json.lastUpdatedMonth = 0;
+
   json.projects.forEach(p => {
     if (!p.planned || !p.planned.some(v => v > 0)) {
-      p.planned = calcPlanned(p.budget, p.startDate, p.endDate);
+      p.planned = calcPlanned(p.budget || 0, p.startDate, p.endDate);
     }
     if (!p.actual) p.actual = Array(12).fill(0);
+    p.planned = p.planned.map(v => isNaN(v) ? 0 : v);
+    p.actual  = p.actual.map(v => isNaN(v) ? 0 : v);
   });
 
   return json;

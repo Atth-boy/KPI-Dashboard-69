@@ -459,13 +459,13 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // toggle ปุ่มซ่อน/โชว์ list — ผูกทันทีไม่รอข้อมูลโหลด
   const list = document.getElementById('project-list');
   const btn  = document.getElementById('toggle-list-btn');
-  btn.addEventListener('click', () => {
-    const hidden = list.classList.toggle('hidden');
-    btn.textContent = hidden ? '▼' : '▲';
-  });
-
+  if (list && btn) {
+    btn.addEventListener('click', () => {
+      const hidden = list.classList.toggle('hidden');
+      btn.textContent = hidden ? '▼' : '▲';
+    });
+  }
   init();
 });
