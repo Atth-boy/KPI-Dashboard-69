@@ -229,7 +229,7 @@ main {
 .detail-contract-row { grid-column: 1 / -1; display: flex; gap: 1.5rem; flex-wrap: wrap; }
 .detail-project-name {
   grid-column: 1 / -1;
-  font-size: 1rem;
+  font-size: 0.88rem;
   color: var(--orange-dark);
   margin-bottom: 0.5rem;
   line-height: 1.4;
