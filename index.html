@@ -98,17 +98,34 @@
       <!-- รายละเอียดโครงการ -->
       <div class="card">
         <div class="card-title">รายละเอียดโครงการ</div>
-        <div class="project-select-row">
-          <label for="project-select">เลือกโครงการ:</label>
-          <select id="project-select">
-            <option value="">— เลือกโครงการ —</option>
-          </select>
+        <div class="project-search-row">
+          <input id="project-search" type="text" placeholder="ค้นหาโครงการ..." autocomplete="off">
+          <button id="toggle-list-btn" class="toggle-list-btn">▲</button>
         </div>
+        <div id="project-list" class="project-list"></div>
         <div id="project-detail" class="project-detail hidden"></div>
         <div id="project-table-wrap" class="hidden">
           <div class="card-title" style="margin-top:1rem">เป้าจ่าย vs จ่ายจริง รายเดือน (สะสม)</div>
-          <div class="table-scroll">
+          <!-- PC: ตารางเต็ม 12 เดือน -->
+          <div class="table-scroll table-desktop">
             <table id="project-monthly-table" class="monthly-table"></table>
+          </div>
+          <!-- Mobile: swipe 2 ครึ่ง -->
+          <div class="table-swipe table-mobile" id="table-swipe">
+            <div class="table-panel">
+              <div class="table-scroll">
+                <table id="project-monthly-table-1" class="monthly-table"></table>
+              </div>
+            </div>
+            <div class="table-panel">
+              <div class="table-scroll">
+                <table id="project-monthly-table-2" class="monthly-table"></table>
+              </div>
+            </div>
+          </div>
+          <div class="swipe-dots table-mobile">
+            <span class="swipe-dot active" data-idx="0"></span>
+            <span class="swipe-dot" data-idx="1"></span>
           </div>
         </div>
       </div>

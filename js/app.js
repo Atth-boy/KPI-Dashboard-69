@@ -254,25 +254,43 @@ function renderKPI(summary, data) {
   diffEl.className   = 'status-val ' + diffCls;
 }
 
-// ---- Project dropdown ----
+// ---- Project list ----
 function populateProjectSelect(projects) {
-  const sel = document.getElementById('project-select');
-  projects.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = p.name;
-    sel.appendChild(opt);
-  });
+  const list = document.getElementById('project-list');
+  const search = document.getElementById('project-search');
+  let activeId = null;
 
-  sel.addEventListener('change', () => {
-    const proj = projects.find(p => p.id === +sel.value);
-    if (!proj) {
-      document.getElementById('project-detail').classList.add('hidden');
-      document.getElementById('project-table-wrap').classList.add('hidden');
+  function renderList(filter) {
+    const q = filter.trim().toLowerCase();
+    const filtered = q ? projects.filter(p => p.name.toLowerCase().includes(q)) : projects;
+    list.innerHTML = '';
+    if (!filtered.length) {
+      list.innerHTML = '<div class="project-list-empty">ไม่พบโครงการ</div>';
       return;
     }
-    renderProjectDetail(proj);
-    renderMonthlyTable(proj);
+    filtered.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'project-list-item' + (p.id === activeId ? ' active' : '');
+      item.textContent = p.name;
+      item.dataset.id = p.id;
+      item.addEventListener('click', () => {
+        activeId = p.id;
+        renderList(search.value);
+        renderProjectDetail(p);
+        renderMonthlyTable(p);
+        document.getElementById('project-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+      list.appendChild(item);
+    });
+  }
+
+  renderList('');
+  search.addEventListener('input', () => renderList(search.value));
+
+  const btn = document.getElementById('toggle-list-btn');
+  btn.addEventListener('click', () => {
+    const hidden = list.classList.toggle('hidden');
+    btn.textContent = hidden ? '▼' : '▲';
   });
 }
 
@@ -280,6 +298,7 @@ function renderProjectDetail(p) {
   const el = document.getElementById('project-detail');
   el.classList.remove('hidden');
   el.innerHTML = `
+    <div class="detail-project-name">${p.name}</div>
     <div class="detail-item">
       <div class="detail-label">ประเภท</div>
       <div class="detail-value">${p.type}</div>
@@ -316,35 +335,76 @@ function renderMonthlyTable(p) {
   const cumPlanned = cumulative(p.planned);
   const cumActual  = cumulative(p.actual);
 
-  let html = '<thead><tr><th>รายการ</th>';
-  MONTHS_TH.forEach(m => { html += `<th>${m}</th>`; });
-  html += '</tr></thead><tbody>';
+  const dec = window.innerWidth <= 540 ? 2 : 3;
 
-  // เป้าสะสม
-  html += '<tr><td class="row-label">เป้าจ่ายสะสม (ลบ.)</td>';
-  cumPlanned.forEach(v => { html += `<td>${v.toFixed(3)}</td>`; });
-  html += '</tr>';
+  function buildTable(indices) {
+    let html = '<thead><tr><th>รายการ</th>';
+    indices.forEach(i => { html += `<th>${MONTHS_TH[i]}</th>`; });
+    html += '</tr></thead><tbody>';
 
-  // จ่ายจริงสะสม
-  html += '<tr><td class="row-label">จ่ายจริงสะสม (ลบ.)</td>';
+    html += '<tr><td class="row-label">เป้าสะสม</td>';
+    indices.forEach(i => { html += `<td>${cumPlanned[i].toFixed(dec)}</td>`; });
+    html += '</tr>';
+
+    html += '<tr><td class="row-label">จ่ายจริง</td>';
+    indices.forEach(i => {
+      const show = i < globalData.lastUpdatedMonth;
+      html += `<td>${show ? cumActual[i].toFixed(dec) : '—'}</td>`;
+    });
+    html += '</tr>';
+
+    html += '<tr><td class="row-label">ส่วนต่าง</td>';
+    indices.forEach(i => {
+      const show = i < globalData.lastUpdatedMonth;
+      if (!show) { html += '<td>—</td>'; return; }
+      const diff = cumActual[i] - cumPlanned[i];
+      const cls  = diff < 0 ? 'behind' : 'ahead';
+      html += `<td class="${cls}">${diff >= 0 ? '+' : ''}${diff.toFixed(dec)}</td>`;
+    });
+    html += '</tr></tbody>';
+    return html;
+  }
+
+  // PC: ตารางเต็ม
+  let fullHtml = '<thead><tr><th>รายการ</th>';
+  MONTHS_TH.forEach(m => { fullHtml += `<th>${m}</th>`; });
+  fullHtml += '</tr></thead><tbody>';
+  fullHtml += '<tr><td class="row-label">เป้าสะสม (ลบ.)</td>';
+  cumPlanned.forEach(v => { fullHtml += `<td>${v.toFixed(3)}</td>`; });
+  fullHtml += '</tr>';
+  fullHtml += '<tr><td class="row-label">จ่ายจริงสะสม (ลบ.)</td>';
   cumActual.forEach((v, i) => {
     const show = i < globalData.lastUpdatedMonth;
-    html += `<td>${show ? v.toFixed(3) : '—'}</td>`;
+    fullHtml += `<td>${show ? v.toFixed(3) : '—'}</td>`;
   });
-  html += '</tr>';
-
-  // ส่วนต่าง
-  html += '<tr><td class="row-label">ส่วนต่าง (ลบ.)</td>';
+  fullHtml += '</tr>';
+  fullHtml += '<tr><td class="row-label">ส่วนต่าง (ลบ.)</td>';
   cumPlanned.forEach((v, i) => {
     const show = i < globalData.lastUpdatedMonth;
-    if (!show) { html += '<td>—</td>'; return; }
+    if (!show) { fullHtml += '<td>—</td>'; return; }
     const diff = cumActual[i] - v;
     const cls  = diff < 0 ? 'behind' : 'ahead';
-    html += `<td class="${cls}">${diff >= 0 ? '+' : ''}${diff.toFixed(3)}</td>`;
+    fullHtml += `<td class="${cls}">${diff >= 0 ? '+' : ''}${diff.toFixed(3)}</td>`;
   });
-  html += '</tr></tbody>';
+  fullHtml += '</tr></tbody>';
+  document.getElementById('project-monthly-table').innerHTML = fullHtml;
 
-  document.getElementById('project-monthly-table').innerHTML = html;
+  // Mobile: swipe
+  document.getElementById('project-monthly-table-1').innerHTML = buildTable([0,1,2,3,4,5]);
+  document.getElementById('project-monthly-table-2').innerHTML = buildTable([6,7,8,9,10,11]);
+
+  // dots — เลื่อนได้และกดได้
+  const swipe = document.getElementById('table-swipe');
+  const dots  = document.querySelectorAll('.swipe-dot');
+  dots.forEach((d, i) => {
+    d.addEventListener('click', () => {
+      swipe.scrollTo({ left: i * swipe.offsetWidth, behavior: 'smooth' });
+    });
+  });
+  swipe.onscroll = () => {
+    const idx = Math.round(swipe.scrollLeft / swipe.offsetWidth);
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+  };
 }
 
 // ---- Ranking card ----

@@ -157,28 +157,62 @@ main {
 .sub-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
 
 /* ── Project section ── */
-.project-select-row {
+.project-search-row {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  max-width: 320px;
 }
-.project-select-row label { font-size: 0.83rem; color: var(--gray-500); white-space: nowrap; }
-.project-select-row select {
-  flex: 0 1 auto;
-  min-width: 160px;
-  max-width: 300px;
-  padding: 0.42rem 0.65rem;
+.project-search-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.42rem 0.75rem;
   border: 1.5px solid var(--border);
   border-radius: 8px;
   font-size: 0.85rem;
+  font-family: inherit;
   color: var(--text);
   background: #fff;
-  cursor: pointer;
   outline: none;
   transition: border-color 0.15s;
 }
-.project-select-row select:focus { border-color: var(--orange); }
+.project-search-row input:focus { border-color: var(--orange); }
+.toggle-list-btn {
+  flex-shrink: 0;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1.5px solid var(--orange);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--orange-dark);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.toggle-list-btn:hover { background: var(--orange-light); }
+.project-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+.project-list-item {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--gray-200);
+  word-break: break-word;
+  line-height: 1.4;
+  transition: background 0.1s;
+}
+.project-list-item:last-child { border-bottom: none; }
+.project-list-item:hover { background: var(--orange-light); }
+.project-list-item.active { background: var(--orange-light); font-weight: 700; color: var(--orange-dark); }
+.project-list-empty { padding: 0.6rem 0.75rem; font-size: 0.83rem; color: var(--gray-500); }
 
 .project-detail {
   display: grid;
@@ -192,11 +226,55 @@ main {
 .detail-item { display: flex; flex-direction: column; gap: 0.15rem; }
 .detail-item--full { grid-column: 1 / -1; }
 .detail-contract-row { grid-column: 1 / -1; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.detail-project-name {
+  grid-column: 1 / -1;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--orange-dark);
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
 .detail-label { font-size: 0.67rem; color: var(--gray-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-.detail-value { font-size: 0.88rem; font-weight: 700; color: var(--gray-900); }
+.detail-value { font-size: 0.88rem; font-weight: 700; color: var(--gray-900); word-break: break-word; overflow-wrap: break-word; white-space: normal; }
+
+/* ── Monthly table swipe ── */
+.table-swipe {
+  display: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  border-radius: 8px;
+}
+.table-swipe::-webkit-scrollbar { display: none; }
+.table-panel {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  min-width: 0;
+}
+.swipe-dots {
+  display: none;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+.swipe-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gray-300);
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.swipe-dot.active { background: var(--orange); }
 
 /* ── Monthly table ── */
-.table-scroll { overflow-x: auto; border-radius: 8px; }
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+}
 .monthly-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
 .monthly-table th {
   background: var(--gray-700);
@@ -215,7 +293,23 @@ main {
   white-space: nowrap;
 }
 .monthly-table tr:nth-child(even) td { background: var(--gray-100); }
-.monthly-table .row-label { text-align: left; font-weight: 600; color: var(--gray-700); min-width: 160px; }
+.monthly-table .row-label {
+  text-align: left;
+  font-weight: 600;
+  color: var(--gray-700);
+  min-width: 160px;
+  position: sticky;
+  left: 0;
+  background: var(--card-bg);
+  z-index: 1;
+}
+.monthly-table th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--gray-700);
+}
+.monthly-table tr:nth-child(even) .row-label { background: var(--gray-100); }
 .monthly-table .behind { color: #ef4444; font-weight: 600; }
 .monthly-table .ahead  { color: #16a34a; font-weight: 600; }
 
@@ -234,11 +328,14 @@ main {
   /* Sidebar: แสดงเป็น 2 คอลัมน์บน tablet */
   .sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 
-  /* KPI + status card: ขยายเต็มความกว้าง */
-  .kpi-card, .status-card { grid-column: 1 / -1; }
+  /* KPI + status + ranking: เต็มความกว้าง / Donut อยู่ครึ่งซ้ายคนเดียว */
+  .kpi-card, .status-card, #ranking-card { grid-column: 1 / -1; }
 
   /* Donut เล็กลง */
   #chart-donut { max-height: 130px !important; }
+
+  /* Project list - tablet */
+  .project-list { max-height: 220px; }
 
   /* Project detail */
   .project-detail { grid-template-columns: 1fr 1fr; }
@@ -255,15 +352,23 @@ main {
   /* KPI values เล็กลง */
   .kpi-value { font-size: 1.2rem; min-width: 80px; }
 
-  /* Donut เล็กลงอีก */
-  #chart-donut { max-height: 110px !important; }
+  /* Donut มีพื้นที่มากขึ้นบนมือถือ (full-width) */
+  #chart-donut { max-height: 160px !important; }
 
-  /* Project select */
-  .project-select-row { flex-direction: column; align-items: flex-start; }
-  .project-select-row select { max-width: 100%; width: 100%; font-size: 16px; }
+  /* Project list - mobile */
+  .project-list { max-height: 180px; }
+  .project-search-row input { font-size: 16px; padding: 0.55rem 0.75rem; }
+  .project-list-item { padding: 0.55rem 0.75rem; font-size: 0.9rem; }
 
   /* Project detail */
   .project-detail { grid-template-columns: 1fr; }
+
+  /* Font ขั้นต่ำ ~12px บนมือถือ */
+  .card-title { font-size: 0.79rem; }
+  .detail-label { font-size: 0.75rem; letter-spacing: 0.03em; }
+  .kpi-sublabel { font-size: 0.72rem; }
+  .status-label { font-size: 0.79rem; }
+  .ranking-name { font-size: 0.79rem; }
 
   /* Header */
   header h1 { font-size: 0.85rem; }
@@ -271,9 +376,20 @@ main {
   /* ป้องกัน canvas overflow */
   canvas { max-width: 100% !important; }
 
+  /* สลับ PC → Mobile */
+  .table-desktop { display: none; }
+  .table-swipe { display: flex; }
+  .swipe-dots { display: flex; }
+  /* บีบตารางให้จุ 6 เดือนพอดีจอ */
+  .monthly-table { font-size: 0.62rem; }
+  .monthly-table th { padding: 0.28rem 0.18rem; }
+  .monthly-table td { padding: 0.22rem 0.18rem; }
+  .monthly-table .row-label { min-width: 72px; font-size: 0.6rem; }
+
   /* Card */
   .card { padding: 0.75rem 0.85rem; }
 
   /* Detail contract row */
   .detail-contract-row { gap: 0.4rem; }
 }
+
