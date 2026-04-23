@@ -256,26 +256,52 @@ function renderKPI(summary, data) {
 
 // ---- Project list ----
 function populateProjectSelect(projects) {
-  const list = document.getElementById('project-list');
+  const list   = document.getElementById('project-list');
   const search = document.getElementById('project-search');
-  let activeId = null;
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  let activeId     = null;
+  let activeFilter = 'all';
 
-  function renderList(filter) {
-    const q = filter.trim().toLowerCase();
-    const filtered = q ? projects.filter(p => p.name.toLowerCase().includes(q)) : projects;
+  function projectDiff(p) {
+    const m = globalData.lastUpdatedMonth;
+    if (!m) return 0;
+    let planned = 0, actual = 0;
+    for (let i = 0; i < m; i++) {
+      planned += (p.planned[i] || 0);
+      actual  += (p.actual[i]  || 0);
+    }
+    return actual - planned;
+  }
+
+  function renderList() {
+    const q = search.value.trim().toLowerCase();
+    let filtered = q ? projects.filter(p => p.name.toLowerCase().includes(q)) : [...projects];
+    if (activeFilter === 'behind') filtered = filtered.filter(p => projectDiff(p) < 0);
+    if (activeFilter === 'ahead')  filtered = filtered.filter(p => projectDiff(p) >= 0);
+
     list.innerHTML = '';
     if (!filtered.length) {
       list.innerHTML = '<div class="project-list-empty">ไม่พบโครงการ</div>';
       return;
     }
     filtered.forEach(p => {
+      const diff = projectDiff(p);
       const item = document.createElement('div');
       item.className = 'project-list-item' + (p.id === activeId ? ' active' : '');
-      item.textContent = p.name;
       item.dataset.id = p.id;
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = p.name;
+
+      const badge = document.createElement('span');
+      badge.className = 'project-diff-badge ' + (diff < 0 ? 'badge-behind' : 'badge-ahead');
+      badge.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2);
+
+      item.appendChild(nameSpan);
+      item.appendChild(badge);
       item.addEventListener('click', () => {
         activeId = p.id;
-        renderList(search.value);
+        renderList();
         renderProjectDetail(p);
         renderMonthlyTable(p);
         if (window.innerWidth > 540) {
@@ -286,8 +312,17 @@ function populateProjectSelect(projects) {
     });
   }
 
-  renderList('');
-  search.addEventListener('input', () => renderList(search.value));
+  renderList();
+  search.addEventListener('input', renderList);
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeFilter = btn.dataset.filter;
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderList();
+    });
+  });
 }
 
 function renderProjectDetail(p) {

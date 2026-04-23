@@ -102,6 +102,11 @@
           <input id="project-search" type="text" placeholder="ค้นหาโครงการ..." autocomplete="off">
           <button id="toggle-list-btn" class="toggle-list-btn">▲</button>
         </div>
+        <div class="project-filter-row">
+          <button class="filter-btn filter-all active" data-filter="all">ทั้งหมด</button>
+          <button class="filter-btn filter-behind" data-filter="behind">▼ ติดลบ</button>
+          <button class="filter-btn filter-ahead" data-filter="ahead">▲ เป็นบวก</button>
+        </div>
         <div id="project-list" class="project-list"></div>
         <div id="project-detail" class="project-detail hidden"></div>
         <div id="project-table-wrap" class="hidden">

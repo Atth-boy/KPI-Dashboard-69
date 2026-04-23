@@ -194,6 +194,40 @@ main {
   justify-content: center;
 }
 .toggle-list-btn:hover { background: var(--orange-light); }
+
+.project-filter-row {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 0.28rem 0.65rem;
+  border-radius: 20px;
+  border: 1.5px solid var(--gray-300);
+  background: #fff;
+  font-size: 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--gray-700);
+  transition: all 0.15s;
+}
+.filter-btn.filter-behind { border-color: #ef4444; color: #ef4444; }
+.filter-btn.filter-ahead  { border-color: #16a34a; color: #16a34a; }
+.filter-btn.filter-behind.active { background: #ef4444; color: #fff; }
+.filter-btn.filter-ahead.active  { background: #16a34a; color: #fff; }
+.filter-btn.filter-all.active    { background: var(--gray-700); color: #fff; border-color: var(--gray-700); }
+
+.project-diff-badge {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+}
+.badge-behind { background: #fee2e2; color: #ef4444; }
+.badge-ahead  { background: #dcfce7; color: #16a34a; }
+
 .project-list {
   max-height: 200px;
   overflow-y: auto;
@@ -202,6 +236,10 @@ main {
   margin-bottom: 0.75rem;
 }
 .project-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.45rem 0.75rem;
   font-size: 0.85rem;
   cursor: pointer;
