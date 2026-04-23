@@ -255,12 +255,13 @@ function renderKPI(summary, data) {
 }
 
 // ---- Project list ----
+let activeFilter = 'all';
+let _renderList  = null; // เรียกจาก DOMContentLoaded ได้
+
 function populateProjectSelect(projects) {
   const list   = document.getElementById('project-list');
   const search = document.getElementById('project-search');
-  const filterBtns = document.querySelectorAll('.filter-btn');
-  let activeId     = null;
-  let activeFilter = 'all';
+  let activeId = null;
 
   function projectDiff(p) {
     const m = globalData.lastUpdatedMonth;
@@ -312,17 +313,9 @@ function populateProjectSelect(projects) {
     });
   }
 
+  _renderList = renderList;
   renderList();
   search.addEventListener('input', renderList);
-
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      activeFilter = btn.dataset.filter;
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      renderList();
-    });
-  });
 }
 
 function renderProjectDetail(p) {
@@ -496,6 +489,7 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // toggle list
   const list = document.getElementById('project-list');
   const btn  = document.getElementById('toggle-list-btn');
   if (list && btn) {
@@ -504,5 +498,17 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.textContent = hidden ? '▼' : '▲';
     });
   }
+
+  // filter buttons — ผูกทันทีไม่รอข้อมูล
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeFilter = btn.dataset.filter;
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (_renderList) _renderList();
+    });
+  });
+
   init();
 });
