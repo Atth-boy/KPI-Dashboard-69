@@ -28,19 +28,16 @@ function buildData() {
 
     if (!pNo || !(dateVal instanceof Date)) return;
 
-    // แปลง Date → fiscal month index (0=ต.ค., ..., 11=ก.ย.)
-    var greg = dateVal.getMonth();           // 0-based gregorian month
-    var yr   = dateVal.getFullYear();
-    // ตรวจว่าอยู่ในปีงบประมาณนี้
-    var expectedYear = (greg >= 9) ? FISCAL_YEAR_CE - 1 : FISCAL_YEAR_CE;
-    if (yr !== expectedYear) return;
-    var fm = (greg + 3) % 12;               // ม.ค.(0)→3, ต.ค.(9)→0
+    // ใช้ calendar month index ตรงๆ (ม.ค.=0, ก.พ.=1, ..., ธ.ค.=11)
+    var cal = dateVal.getMonth();           // 0-based: Jan=0 ... Dec=11
+    var yr  = dateVal.getFullYear();
+    if (yr !== FISCAL_YEAR_CE) return;     // เอาเฉพาะปี ค.ศ. นี้ (2026)
 
     if (!monthlyMap[pNo]) {
       monthlyMap[pNo] = { planned: Array(12).fill(0), actual: Array(12).fill(0) };
     }
-    monthlyMap[pNo].planned[fm] += plan;
-    monthlyMap[pNo].actual[fm]  += act;
+    monthlyMap[pNo].planned[cal] += plan;
+    monthlyMap[pNo].actual[cal]  += act;
   });
 
   // ---- ประกอบโครงการ ----
@@ -74,10 +71,9 @@ function buildData() {
 
       actual = Array(12).fill(0);
       for (var cal = 0; cal < 12; cal++) {
-        var fm  = (cal + 3) % 12;   // ม.ค.(0)→fm3, ก.พ.(1)→fm4, ..., ต.ค.(9)→fm0
         var inc = calCum[cal] - (cal > 0 ? calCum[cal - 1] : 0);
-        if (inc < 0) inc = 0;        // ห้ามติดลบ (ช่องที่ยังไม่กรอกข้อมูล)
-        actual[fm] = Math.round(inc / 1000000 * 1e6) / 1e6;
+        if (inc < 0) inc = 0;
+        actual[cal] = Math.round(inc / 1000000 * 1e6) / 1e6;
       }
       planned = pData ? pData.planned : Array(12).fill(0);
     }

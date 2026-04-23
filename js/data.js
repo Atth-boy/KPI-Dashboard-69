@@ -30,16 +30,12 @@ function calcPlanned(budget, startStr, endStr) {
   );
   const perMonth = budget / totalMonths;
 
-  for (let fm = 0; fm < 12; fm++) {
-    // แปลง fiscal month → CE year + gregorian month
-    const yr   = fm <= 2 ? FISCAL_YEAR_CE - 1 : FISCAL_YEAR_CE;
-    const greg = fm <= 2 ? 9 + fm              : fm - 3;
-
-    const mAbs     = yr * 12 + greg;
+  // วนตามปีปฏิทิน (ม.ค.=0 ... ธ.ค.=11) ของปีนี้ (FISCAL_YEAR_CE)
+  for (let cal = 0; cal < 12; cal++) {
+    const mAbs     = FISCAL_YEAR_CE * 12 + cal;
     const startAbs = start.year * 12 + start.month;
     const endAbs   = end.year   * 12 + end.month;
-
-    if (mAbs >= startAbs && mAbs <= endAbs) planned[fm] = +perMonth.toFixed(6);
+    if (mAbs >= startAbs && mAbs <= endAbs) planned[cal] = +perMonth.toFixed(6);
   }
   return planned;
 }
