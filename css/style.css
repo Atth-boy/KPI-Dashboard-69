@@ -122,6 +122,20 @@ main {
 .info-value { font-weight: 700; font-size: 0.95rem; color: var(--gray-700); }
 .info-value.negative { color: #ef4444; }
 
+/* ── Ranking card ── */
+.ranking-section { display: flex; flex-direction: column; gap: 0.4rem; }
+.ranking-title { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; }
+.ranking-title.good   { color: #16a34a; }
+.ranking-title.behind { color: #ef4444; }
+.ranking-divider { border-top: 1px solid var(--gray-200); margin: 0.6rem 0; }
+.ranking-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.ranking-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.4rem; }
+.ranking-name { font-size: 0.75rem; color: var(--gray-700); flex: 1; line-height: 1.3; }
+.ranking-diff { font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+.ranking-diff.good   { color: #16a34a; }
+.ranking-diff.behind { color: #ef4444; }
+.ranking-rank { font-size: 0.7rem; color: var(--gray-400); min-width: 1rem; }
+
 /* ── Status card ── */
 .status-month { font-size: 0.78rem; color: var(--gray-500); text-align: center; margin-bottom: 0.6rem; }
 .status-row { display: flex; justify-content: space-between; align-items: center; padding: 0.25rem 0; }

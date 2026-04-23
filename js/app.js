@@ -347,6 +347,33 @@ function renderMonthlyTable(p) {
   document.getElementById('project-monthly-table').innerHTML = html;
 }
 
+// ---- Ranking card ----
+function renderRanking(projects, lastUpdatedMonth) {
+  const diffs = projects.map(p => {
+    let actual = 0, planned = 0;
+    for (let i = 0; i < lastUpdatedMonth; i++) {
+      actual  += (p.actual[i]  || 0);
+      planned += (p.planned[i] || 0);
+    }
+    return { name: p.name, diff: +(actual - planned).toFixed(3) };
+  });
+
+  const good   = diffs.filter(p => p.diff > 0).sort((a, b) => b.diff - a.diff).slice(0, 3);
+  const behind = diffs.filter(p => p.diff < 0).sort((a, b) => a.diff - b.diff).slice(0, 3);
+
+  const toHTML = (list, cls, sign) => list.length
+    ? list.map((p, i) => `
+        <li class="ranking-item">
+          <span class="ranking-rank">${i + 1}.</span>
+          <span class="ranking-name">${p.name}</span>
+          <span class="ranking-diff ${cls}">${sign}${Math.abs(p.diff).toFixed(3)} ลบ.</span>
+        </li>`).join('')
+    : '<li class="ranking-item"><span class="ranking-name" style="color:var(--gray-400)">ไม่มีข้อมูล</span></li>';
+
+  document.getElementById('ranking-good').innerHTML   = toHTML(good,   'good',   '+');
+  document.getElementById('ranking-behind').innerHTML = toHTML(behind, 'behind', '-');
+}
+
 // ---- Loading state ----
 function setLoading(on) {
   document.getElementById('last-updated').textContent = on ? 'กำลังโหลดข้อมูล...' : '';
@@ -360,6 +387,7 @@ function renderAll(data) {
   renderMainSCurve(data);
   renderSubChart('chart-project', data.projects, 'ลงทุนโครงการ');
   renderSubChart('chart-normal',  data.projects, 'ลงทุนปกติ');
+  renderRanking(data.projects, data.lastUpdatedMonth);
   populateProjectSelect(data.projects);
 }
 
