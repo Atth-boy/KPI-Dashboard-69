@@ -122,6 +122,16 @@ main {
 .info-value { font-weight: 700; font-size: 0.95rem; color: var(--gray-700); }
 .info-value.negative { color: #ef4444; }
 
+/* ── Status card ── */
+.status-month { font-size: 0.78rem; color: var(--gray-500); text-align: center; margin-bottom: 0.6rem; }
+.status-row { display: flex; justify-content: space-between; align-items: center; padding: 0.25rem 0; }
+.status-label { font-size: 0.75rem; color: var(--gray-500); }
+.status-val { font-weight: 700; font-size: 0.92rem; color: var(--gray-700); }
+.status-val.orange { color: var(--orange); }
+.status-val.behind { color: #ef4444; }
+.status-val.ahead  { color: #16a34a; }
+.status-divider { border-top: 1px solid var(--gray-200); margin: 0.35rem 0; }
+
 /* ── Content ── */
 .content { display: flex; flex-direction: column; gap: 0.8rem; }
 .chart-card canvas { width: 100% !important; }

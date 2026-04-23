@@ -36,6 +36,24 @@
         <div class="kpi-diff" id="kpi-diff"></div>
       </div>
 
+      <div class="card status-card">
+        <div class="card-title">สถานะการจ่าย (ปัจจุบัน)</div>
+        <div class="status-month" id="status-month">—</div>
+        <div class="status-row">
+          <span class="status-label">เป้าจ่ายสะสม (ลบ.)</span>
+          <span class="status-val" id="status-planned">—</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">จ่ายจริงสะสม (ลบ.)</span>
+          <span class="status-val orange" id="status-actual">—</span>
+        </div>
+        <div class="status-divider"></div>
+        <div class="status-row">
+          <span class="status-label">ส่วนต่าง (ลบ.)</span>
+          <span class="status-val" id="status-diff">—</span>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-title">เป้าจ่ายรวม (ลบ.)</div>
         <canvas id="chart-donut" height="200"></canvas>

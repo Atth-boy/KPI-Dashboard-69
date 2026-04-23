@@ -80,6 +80,7 @@ function computeSummary(data) {
     totalBudgetProject,
     totalBudgetNormal,
     totalActual,
+    plannedToNow,
     behind: plannedToNow - totalActual,
   };
 }
