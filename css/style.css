@@ -321,6 +321,7 @@ main {
 .monthly-table .ahead  { color: #16a34a; font-weight: 600; }
 
 .hidden { display: none !important; }
+.title-responsive { display: none; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
@@ -347,6 +348,10 @@ main {
   /* Project detail */
   .project-detail { grid-template-columns: 1fr 1fr; }
   .detail-contract-row { flex-direction: column; gap: 0.5rem; }
+
+  /* สลับหัวข้อตาราง */
+  .title-pc { display: none; }
+  .title-responsive { display: block; }
 
   /* ตาราง tablet เหมือนมือถือ: swipe + ซ่อน column รายการ */
   .table-desktop { display: none; }
