@@ -39,8 +39,8 @@ function buildData() {
     if (!monthlyMap[pNo]) {
       monthlyMap[pNo] = { planned: Array(12).fill(0), actual: Array(12).fill(0) };
     }
-    monthlyMap[pNo].planned[fm] = plan;
-    monthlyMap[pNo].actual[fm]  = act;
+    monthlyMap[pNo].planned[fm] += plan;
+    monthlyMap[pNo].actual[fm]  += act;
   });
 
   // ---- ประกอบโครงการ ----
