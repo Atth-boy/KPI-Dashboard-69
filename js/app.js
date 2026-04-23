@@ -233,16 +233,19 @@ function renderKPI(summary, data) {
   document.getElementById('kpi-result').textContent = summary.totalActual.toFixed(3);
   document.getElementById('kpi-diff').textContent   =
     summary.behind > 0 ? `ต่ำกว่าเป้าสะสม ${summary.behind.toFixed(3)} ลบ.` : '';
-  document.getElementById('info-month').textContent  = MONTHS_TH[data.lastUpdatedMonth - 1] + '/' + data.year;
-  document.getElementById('info-behind').textContent = summary.behind.toFixed(3);
   document.getElementById('last-updated').textContent = 'อัพเดต: ' + monthLabel;
+
+  // หาวันสุดท้ายของเดือนข้อมูลล่าสุด
+  const ceYear  = data.year - 543;
+  const lastDay = new Date(ceYear, data.lastUpdatedMonth, 0).getDate();
+  const dayLabel = `ณ วันที่ ${lastDay} ${MONTHS_TH[data.lastUpdatedMonth - 1]} ${data.year}`;
 
   // สถานะการจ่าย (ปัจจุบัน)
   const diff    = summary.totalActual - summary.plannedToNow;
   const diffCls = diff >= 0 ? 'ahead' : 'behind';
   const diffTxt = (diff >= 0 ? '+' : '') + diff.toFixed(3);
 
-  document.getElementById('status-month').textContent   = 'ณ เดือน ' + monthLabel;
+  document.getElementById('status-month').textContent   = dayLabel;
   document.getElementById('status-planned').textContent = summary.plannedToNow.toFixed(3);
   document.getElementById('status-actual').textContent  = summary.totalActual.toFixed(3);
 
