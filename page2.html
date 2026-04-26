@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Dashboard งบลงทุน — จำแนกตามประเภทงบ</title>
+  <link rel="stylesheet" href="css/style.css?v=20260427">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <header>
+    <div class="header-title">
+      <h1>รายงานผลงบประมาณลงทุน ประจำปี 2569<br><span>จำแนกตามประเภทงบประมาณ</span></h1>
+    </div>
+    <div class="header-meta">
+      <span id="last-updated2">อัพเดต: —</span>
+    </div>
+  </header>
+
+  <main class="main-solo">
+
+    <!-- แถวสรุปด้านบน -->
+    <div class="p2-summary-row">
+      <div class="card kpi-card" id="p2-sum-overall"></div>
+      <div class="card p2-sum-cat" id="p2-sum-annual"></div>
+      <div class="card p2-sum-cat" id="p2-sum-commitop"></div>
+      <div class="card p2-sum-cat" id="p2-sum-commitpay"></div>
+    </div>
+
+    <!-- กราฟ 1: งบประมาณประจำปี -->
+    <div class="card chart-card">
+      <div class="card-title">งบประมาณประจำปี (สะสม)</div>
+      <div class="kpi2-row" id="kpi-annual">
+        <div class="kpi2-skeleton">กำลังโหลด...</div>
+      </div>
+      <canvas id="chart-annual" height="140"></canvas>
+    </div>
+
+    <!-- กราฟ 2: งบประมาณผูกพันดำเนินการ -->
+    <div class="card chart-card">
+      <div class="card-title">งบประมาณผูกพันดำเนินการ (สะสม)</div>
+      <div class="kpi2-row" id="kpi-commitop">
+        <div class="kpi2-skeleton">กำลังโหลด...</div>
+      </div>
+      <canvas id="chart-commitop" height="140"></canvas>
+    </div>
+
+    <!-- กราฟ 3: งบประมาณผูกพันการจ่ายเงิน -->
+    <div class="card chart-card">
+      <div class="card-title">งบประมาณผูกพันการจ่ายเงิน (สะสม)</div>
+      <div class="kpi2-row" id="kpi-commitpay">
+        <div class="kpi2-skeleton">กำลังโหลด...</div>
+      </div>
+      <canvas id="chart-commitpay" height="140"></canvas>
+    </div>
+
+  </main>
+
+  <script src="js/data.js?v=20260427"></script>
+  <script src="js/page2.js?v=20260427"></script>
+</body>
+</html>

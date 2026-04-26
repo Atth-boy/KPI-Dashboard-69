@@ -13,6 +13,7 @@
 
 const BUDGET_SHEET   = 'กรอกรายการงบประมาณ';
 const PROGRESS_SHEET = 'กรอกเปอร์เซ็นงาน';
+const DETAIL_SHEET   = 'รายละเอียดโครงการ'; // col A = ชื่อโครงการ, col D = ประเภทงบ (ประจำปี/ผูกดำ/ผูกจ่าย)
 const FISCAL_YEAR_BE = 2569;
 
 // entry point — browser จะ fetch URL นี้
@@ -32,6 +33,16 @@ function buildData() {
   const budgetRows   = getSheetValues(ss, BUDGET_SHEET);
   const progressRows = getSheetValues(ss, PROGRESS_SHEET);
 
+  // อ่าน budgetCategory จาก tab รายละเอียดโครงการ (col A = ชื่อ, col D = ประเภทงบ)
+  const detailRows  = getSheetValues(ss, DETAIL_SHEET);
+  const categoryMap = {};
+  for (let di = 1; di < detailRows.length; di++) {
+    const dr   = detailRows[di];
+    const dKey = String(dr[1] || '').trim(); // col B = หมายเลขโครงการ
+    const dCat = String(dr[3] || '').trim(); // col D = ประเภทงบ
+    if (dKey) categoryMap[dKey] = dCat;
+  }
+
   const progressMap = buildProgressMap(progressRows);
 
   const projects = [];
@@ -40,9 +51,10 @@ function buildData() {
   // วนทุก row ของ budget (เริ่ม i=1 ข้าม header)
   for (let i = 1; i < budgetRows.length; i++) {
     const r    = budgetRows[i];
-    const name = String(r[0] || '').trim();
+    const name   = String(r[0] || '').trim();
     if (!name) continue;               // ข้าม row สรุปหรือว่าง
 
+    const projNo = String(r[1] || '').trim(); // col B = หมายเลขโครงการ
     const wbs    = String(r[2] || '').trim();
     const budget = toFloat(r[3]);      // เป้าจ่ายรวม (ลบ.)
 
@@ -64,16 +76,17 @@ function buildData() {
     const endDate   = formatDateBE(r[6]);
 
     projects.push({
-      id:        i,
+      id:             i,
       name,
-      type:      wbs.startsWith('I/') ? 'ลงทุนโครงการ' : 'ลงทุนปกติ',
+      type:           wbs.startsWith('I/') ? 'ลงทุนโครงการ' : 'ลงทุนปกติ',
+      budgetCategory: categoryMap[projNo] || '',
       budget,
       wbs,
-      contract:  String(r[4] || '').trim() || '—',
-      startDate: startDate || '—',
-      endDate:   endDate   || '—',
+      contract:       String(r[4] || '').trim() || '—',
+      startDate:      startDate || '—',
+      endDate:        endDate   || '—',
       actual,
-      progress:  progressMap[wbs] || Array(12).fill(null),
+      progress:       progressMap[wbs] || Array(12).fill(null),
     });
   }
 

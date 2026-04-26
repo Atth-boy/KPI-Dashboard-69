@@ -1,5 +1,6 @@
 var BUDGET_SHEET   = 'กรอกรายการงบประมาณ';
 var PLANNED_SHEET  = 'งบประมาณ เป้า-จ่ายจริง';
+var DETAIL_SHEET   = 'รายละเอียดโครงการ'; // col A = ชื่อโครงการ, col D = ประเภทงบ (ประจำปี/ผูกดำ/ผูกจ่าย)
 var SPREADSHEET_ID = '12tNI9JBrwubtRPmL9xFjKt_ncehe7NNF2EkOlBYKSkk';
 var FISCAL_YEAR_BE = 2569;
 var FISCAL_YEAR_CE = FISCAL_YEAR_BE - 543;  // 2026
@@ -15,6 +16,16 @@ function buildData() {
 
   var budgetRows  = getSheetValues(ss, BUDGET_SHEET);
   var plannedRows = getSheetValues(ss, PLANNED_SHEET);
+
+  // อ่าน budgetCategory จาก tab รายละเอียดโครงการ (col A = ชื่อ, col D = ประเภทงบ)
+  var detailRows  = getSheetValues(ss, DETAIL_SHEET);
+  var categoryMap = {};
+  for (var di = 1; di < detailRows.length; di++) {
+    var dr   = detailRows[di];
+    var dKey = String(dr[1] || '').trim(); // col B = หมายเลขโครงการ
+    var dCat = String(dr[3] || '').trim(); // col D = ประเภทงบ
+    if (dKey) categoryMap[dKey] = dCat;
+  }
 
   // ---- อ่านข้อมูลจาก planned sheet (Power BI style) ----
   var monthlyMap = {};  // key = projNo, value = { planned:[12], actual:[12] }
@@ -89,17 +100,18 @@ function buildData() {
     }
 
     projects.push({
-      id:        i,
-      name:      name,
-      type:      wbs.startsWith('I/') ? 'ลงทุนโครงการ' : 'ลงทุนปกติ',
-      budget:    budget,
-      wbs:       wbs,
-      projNo:    projNo,
-      actual:    actual,
-      planned:   planned,
-      contract:  String(r[4] || '').trim() || '—',
-      startDate: formatDateBE(r[5]) || '—',
-      endDate:   formatDateBE(r[6]) || '—'
+      id:             i,
+      name:           name,
+      type:           wbs.startsWith('I/') ? 'ลงทุนโครงการ' : 'ลงทุนปกติ',
+      budgetCategory: categoryMap[projNo] || '',
+      budget:         budget,
+      wbs:            wbs,
+      projNo:         projNo,
+      actual:         actual,
+      planned:        planned,
+      contract:       String(r[4] || '').trim() || '—',
+      startDate:      formatDateBE(r[5]) || '—',
+      endDate:        formatDateBE(r[6]) || '—'
     });
   }
 
