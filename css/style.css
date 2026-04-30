@@ -1094,12 +1094,12 @@ main {
   flex-direction: column;
   align-items: center;
   gap: 5px;
-  min-width: 50px;
+  width: 36px;
   flex-shrink: 0;
 }
 .proc-mnode-circle {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 2px solid var(--gray-300);
   background: var(--gray-100);
@@ -1107,24 +1107,24 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   font-weight: 700;
   flex-shrink: 0;
 }
 .proc-mnode-label {
-  font-size: 0.52rem;
+  font-size: 0.6rem;
   color: var(--gray-500);
   text-align: center;
   line-height: 1.2;
-  max-width: 52px;
+  max-width: 62px;
   word-break: break-word;
 }
 .proc-mconn {
   flex: 1;
-  min-width: 8px;
+  min-width: 6px;
   height: 2px;
   background: var(--gray-200);
-  margin-top: 13px;
+  margin-top: 17px;
   flex-shrink: 0;
 }
 .proc-mconn-on { background: #22c55e; }
