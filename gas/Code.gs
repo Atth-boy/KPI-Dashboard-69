@@ -147,6 +147,22 @@ function buildData() {
     monthDays[cal] = dateVal.getDate();
   });
 
+  // อ่าน procurement sheet ครั้งเดียว — หา project ที่บริหารโครงการ = 100%
+  var completedSet = {};
+  var procSheet = ss.getSheetByName(PROCURE_SHEET);
+  if (procSheet) {
+    var procRows = procSheet.getDataRange().getValues();
+    for (var pi = 1; pi < procRows.length; pi++) {
+      var pr = procRows[pi];
+      var mgmtPct = (typeof pr[2] === 'number')
+        ? Math.round(pr[2] * 100)
+        : parseInt(String(pr[2] || ''));
+      if (String(pr[1] || '').trim() === 'บริหารโครงการ' && mgmtPct >= 100) {
+        completedSet[String(pr[0] || '').trim()] = true;
+      }
+    }
+  }
+
   var projects = [];
   var lastUpdatedMonth = 0;
 
@@ -199,7 +215,8 @@ function buildData() {
       planned:        planned,
       contract:       String(r[4] || '').trim() || '—',
       startDate:      formatDateBE(r[5]) || '—',
-      endDate:        formatDateBE(r[6]) || '—'
+      endDate:        formatDateBE(r[6]) || '—',
+      procComplete:   completedSet[name] || false
     });
   }
 
@@ -254,4 +271,22 @@ function testProcure() {
   saveProcurementStatus('ทดสอบโครงการ', '1', 'เรียบร้อย', 'ทดสอบ save function');
   var result = getProcurementStatus('ทดสอบโครงการ');
   Logger.log(JSON.stringify(result));
+}
+
+function testProcComplete() {
+  var ss        = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var procSheet = ss.getSheetByName(PROCURE_SHEET);
+  if (!procSheet) { Logger.log('ไม่พบ sheet: ' + PROCURE_SHEET); return; }
+
+  var rows = procSheet.getDataRange().getValues();
+  Logger.log('จำนวนแถวใน ' + PROCURE_SHEET + ': ' + (rows.length - 1));
+
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    Logger.log('แถว ' + i + ' | ชื่อ="' + r[0] + '" | ขั้น="' + r[1] + '" | สถานะ="' + r[2] + '"');
+    if (String(r[1]).trim() === 'บริหารโครงการ') {
+      var match = String(r[2]).trim() === '100%';
+      Logger.log('  → พบ บริหารโครงการ | 100% match = ' + match);
+    }
+  }
 }

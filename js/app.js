@@ -291,6 +291,9 @@ function populateProjectSelect(projects) {
       item.className = 'project-list-item' + (p.id === activeId ? ' active' : '');
       item.dataset.id = p.id;
 
+      const dot = document.createElement('span');
+      dot.className = 'proc-dot ' + (p.procComplete ? 'proc-dot-done' : 'proc-dot-pending');
+
       const nameSpan = document.createElement('span');
       nameSpan.textContent = p.name;
 
@@ -298,6 +301,7 @@ function populateProjectSelect(projects) {
       badge.className = 'project-diff-badge ' + (diff < 0 ? 'badge-behind' : 'badge-ahead');
       badge.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2);
 
+      item.appendChild(dot);
       item.appendChild(nameSpan);
       item.appendChild(badge);
       item.addEventListener('click', () => {

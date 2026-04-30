@@ -640,6 +640,51 @@ main {
 }
 .up-project-select:focus { border-color: var(--orange); }
 
+/* ── Project context banner ── */
+/* ── Completed project in list ── */
+/* ── Procurement status dot in project list ── */
+.proc-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+.proc-dot-done    { background: #22c55e; }
+.proc-dot-pending { background: var(--gray-300); }
+.project-list-item > span:nth-child(2) { flex: 1; }
+
+/* ── Completed project in list ── */
+.project-list-item.proc-complete {
+  color: var(--gray-400);
+}
+.project-list-item.proc-complete::after {
+  content: ' ✓';
+  color: #22c55e;
+  font-size: 0.8em;
+  font-weight: 700;
+}
+.project-list-item.proc-complete:hover {
+  color: var(--gray-500);
+}
+
+/* ── Project context banner ── */
+.up-project-context {
+  background: var(--orange-light);
+  border-left: 4px solid var(--orange);
+  border-radius: 6px;
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+  color: var(--gray-700);
+  margin-bottom: 0.75rem;
+}
+.up-project-context::before {
+  content: 'โครงการที่เลือก: ';
+  font-weight: 600;
+  color: var(--orange-dark);
+}
+
 /* ── Stepper card ── */
 .up-stepper-card {}
 .up-stepper-scroll { overflow-x: auto; padding-bottom: 0.5rem; }

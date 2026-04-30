@@ -117,13 +117,13 @@ function renderStepper() {
     ${node(PROC_STEPS[6])}
     ${line(done(7))}
 
-    <div class="snode ${done(7) ? 'snode-done snode-final-on' : 'snode-locked'}"
+    <div class="snode ${done(7) ? (mgmtData.percent >= 100 ? 'snode-done snode-final-on' : 'snode-inprogress snode-final-on') : 'snode-locked'}"
          id="snode-final"
          ${done(7) ? 'role="button" tabindex="0"' : ''}>
       <div class="snode-circle">★</div>
       <div class="snode-text">
         <div class="snode-name">บริหารโครงการ</div>
-        <div class="snode-status">${done(7) ? 'พร้อมใช้งาน' : 'ล็อก'}</div>
+        <div class="snode-status">${done(7) ? (mgmtData.percent >= 100 ? 'เรียบร้อย' : 'กำลังดำเนินการ') : 'ล็อก'}</div>
       </div>
     </div>
   `;
@@ -279,6 +279,7 @@ async function saveMgmt() {
   } finally {
     btn.disabled    = false;
     btn.textContent = 'บันทึก';
+    renderStepper();
   }
 }
 
@@ -355,7 +356,9 @@ function renderProjectList() {
   listEl.innerHTML = '';
   filtered.forEach(p => {
     const item = document.createElement('div');
-    item.className = 'project-list-item' + (p.name === currentProject ? ' active' : '');
+    item.className = 'project-list-item' +
+      (p.name === currentProject ? ' active' : '') +
+      (p.procComplete ? ' proc-complete' : '');
     item.textContent = p.name;
     item.addEventListener('click', () => selectProject(p.name));
     listEl.appendChild(item);
@@ -371,9 +374,14 @@ async function selectProject(name) {
 
   document.getElementById('workflow-section').style.display = '';
   document.getElementById('step-detail-card').style.display = 'none';
+  document.getElementById('up-project-context').textContent = name;
 
   await loadProjectStatus(name);
   renderStepper();
+
+  const nextId = findNextStep();
+  if (nextId) openDetail(nextId);
+  else if (stepData[7]?.status === 'เรียบร้อย') showMgmt();
 }
 
 async function loadProjects() {
