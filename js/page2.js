@@ -438,6 +438,13 @@ function p2_esc(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// Sheets เก็บ % cell เป็น decimal (1.0 = 100%, 0.9 = 90%) — handle ทั้ง decimal และ string "XX%"
+function p2_parseMgmtPct(v) {
+  if (typeof v === 'string' && v.includes('%')) return Math.round(parseFloat(v)) || 0;
+  const n = parseFloat(v) || 0;
+  return n > 1 ? Math.round(n) : Math.round(n * 100);
+}
+
 function p2_procCls(id, sd) {
   const done = n => sd[n]?.status === 'เรียบร้อย';
   const ok = id === 1 ? true : id === 2 ? done(1) : id === 3 ? done(2)
@@ -528,7 +535,7 @@ async function p2_loadAndRenderProcurement(projectName) {
       const json = await res.json();
       (json.steps || []).forEach(s => {
         if (s.step === 'บริหารโครงการ') {
-          mgmtData = { percent: parseInt(s.status) || 0, details: s.details, updatedAt: s.updatedAt };
+          mgmtData = { percent: p2_parseMgmtPct(s.status), details: s.details, updatedAt: s.updatedAt };
         } else {
           stepData[s.step] = { status: s.status, details: s.details, updatedAt: s.updatedAt };
         }
