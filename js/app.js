@@ -304,6 +304,7 @@ function populateProjectSelect(projects) {
         activeId = p.id;
         renderList();
         renderProjectDetail(p);
+        loadAndRenderProcurement(p.name);
         renderMonthlyTable(p);
         if (window.innerWidth > 540) {
           document.getElementById('project-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -456,6 +457,138 @@ function renderRanking(projects, lastUpdatedMonth) {
 
   document.getElementById('ranking-good').innerHTML   = toHTML(good,   'good',   '+');
   document.getElementById('ranking-behind').innerHTML = toHTML(behind, 'behind', '-');
+}
+
+// ── Procurement card (read-only) ─────────────────────────────
+const PROC_STEP_NAMES = [
+  { id: 1, label: 'สร้าง/ประกาศแผน' },
+  { id: 2, label: 'ขอความเห็นชอบ' },
+  { id: 3, label: 'ขออนุมัติ TOR',     parallel: true },
+  { id: 4, label: 'ขออนุมัติราคากลาง', parallel: true },
+  { id: 5, label: 'รายงานขอจ้าง' },
+  { id: 6, label: 'พิจารณาผล' },
+  { id: 7, label: 'ลงนามสัญญา' },
+];
+
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function procStepCls(id, sd) {
+  const done = n => sd[n]?.status === 'เรียบร้อย';
+  const ok = id === 1 ? true
+           : id === 2 ? done(1)
+           : id === 3 ? done(2)
+           : id === 4 ? done(2)
+           : id === 5 ? done(3) && done(4)
+           : id === 6 ? done(5)
+           : id === 7 ? done(6) : false;
+  if (!ok) return 'snode-locked';
+  const s = sd[id]?.status;
+  if (s === 'เรียบร้อย')       return 'snode-done';
+  if (s === 'กำลังดำเนินการ') return 'snode-inprogress';
+  if (s === 'รออนุมัติ')       return 'snode-waiting';
+  return 'snode-available';
+}
+
+function renderProcCard(stepData, mgmtData) {
+  const done  = n => stepData[n]?.status === 'เรียบร้อย';
+  const mnode = step => {
+    const cls  = procStepCls(step.id, stepData);
+    const icon = cls === 'snode-done' ? '✓' : step.id;
+    return `<div class="proc-mnode ${cls}">
+      <div class="proc-mnode-circle">${icon}</div>
+      <div class="proc-mnode-label">${escHtml(step.label)}</div>
+    </div>`;
+  };
+  const mconn = on => `<div class="proc-mconn${on ? ' proc-mconn-on' : ''}"></div>`;
+
+  document.getElementById('proc-stepper-mini').innerHTML = `
+    <div class="proc-mini">
+      ${mnode(PROC_STEP_NAMES[0])}
+      ${mconn(done(1))}
+      ${mnode(PROC_STEP_NAMES[1])}
+      ${mconn(done(2))}
+      <div class="proc-mparallel">
+        <div class="proc-mparallel-label">ทำพร้อมกัน</div>
+        <div class="proc-mparallel-inner">
+          ${mnode(PROC_STEP_NAMES[2])}
+          ${mnode(PROC_STEP_NAMES[3])}
+        </div>
+      </div>
+      ${mconn(done(3) && done(4))}
+      ${mnode(PROC_STEP_NAMES[4])}
+      ${mconn(done(5))}
+      ${mnode(PROC_STEP_NAMES[5])}
+      ${mconn(done(6))}
+      ${mnode(PROC_STEP_NAMES[6])}
+    </div>`;
+
+  const latestEl = document.getElementById('proc-latest-wrap');
+  const STATE_CLS = {
+    'กำลังดำเนินการ': 'state-inprogress',
+    'รออนุมัติ':       'state-waiting',
+    'เรียบร้อย':       'state-done',
+  };
+
+  let latest = null;
+  for (let id = 7; id >= 1; id--) {
+    if (stepData[id]?.status) { latest = { step: PROC_STEP_NAMES[id - 1], data: stepData[id] }; break; }
+  }
+
+  // mgmtData (บริหารโครงการ) แสดงก่อนเสมอเมื่อถึงขั้นนั้น เพราะเป็นสถานะล่าสุดของโครงการ
+  if (mgmtData?.updatedAt) {
+    latestEl.innerHTML = `
+      <div class="proc-latest state-done">
+        <div class="proc-latest-header">
+          <span class="proc-latest-step">บริหารโครงการ</span>
+          <span class="proc-status-pill state-done">${mgmtData.percent || 0}% ความคืบหน้า</span>
+        </div>
+        ${mgmtData.details ? `<div class="proc-latest-notes">${escHtml(mgmtData.details)}</div>` : ''}
+        ${mgmtData.updatedAt ? `<div class="proc-latest-time">อัพเดต: ${escHtml(mgmtData.updatedAt)}</div>` : ''}
+      </div>`;
+  } else if (latest) {
+    const { step, data } = latest;
+    const sCls = STATE_CLS[data.status] || '';
+    latestEl.innerHTML = `
+      <div class="proc-latest ${sCls}">
+        <div class="proc-latest-header">
+          <span class="proc-latest-step">ขั้นที่ ${step.id} — ${escHtml(step.label)}</span>
+          <span class="proc-status-pill ${sCls}">${escHtml(data.status)}</span>
+        </div>
+        ${data.details ? `<div class="proc-latest-notes">${escHtml(data.details)}</div>` : ''}
+        ${data.updatedAt ? `<div class="proc-latest-time">อัพเดต: ${escHtml(data.updatedAt)}</div>` : ''}
+      </div>`;
+  } else {
+    latestEl.innerHTML = '<div class="proc-no-data">ยังไม่มีข้อมูลขั้นตอนการจัดจ้าง</div>';
+  }
+}
+
+async function loadAndRenderProcurement(projectName) {
+  const section = document.getElementById('proc-section');
+  section.classList.remove('hidden');
+  document.getElementById('proc-stepper-mini').innerHTML =
+    '<div class="proc-loading">กำลังโหลดสถานะ...</div>';
+  document.getElementById('proc-latest-wrap').innerHTML = '';
+
+  let stepData = {}, mgmtData = {};
+  try {
+    const url = `${GAS_URL}?action=getProcurementStatus&project=${encodeURIComponent(projectName)}`;
+    const res  = await fetch(url);
+    if (res.ok) {
+      const json = await res.json();
+      (json.steps || []).forEach(s => {
+        if (s.step === 'บริหารโครงการ') {
+          mgmtData = { percent: parseInt(s.status) || 0, details: s.details, updatedAt: s.updatedAt };
+        } else {
+          stepData[s.step] = { status: s.status, details: s.details, updatedAt: s.updatedAt };
+        }
+      });
+    }
+  } catch { /* GAS อาจยังไม่รองรับ action นี้ */ }
+
+  renderProcCard(stepData, mgmtData);
 }
 
 // ---- Loading state ----

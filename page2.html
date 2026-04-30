@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Dashboard งบลงทุน — จำแนกตามประเภทงบ</title>
-  <link rel="stylesheet" href="css/style.css?v=20260429">
+  <link rel="stylesheet" href="css/style.css?v=20260430">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -17,7 +17,7 @@
       <h1>รายงานผลงบประมาณลงทุน ประจำปี 2569<br><span>จำแนกตามประเภทงบประมาณ</span></h1>
     </div>
     <div class="header-meta">
-      <span id="last-updated2">อัพเดต: —</span>
+      <a href="index.html" class="back-link">← กลับหน้าหลัก</a>
     </div>
   </header>
 
@@ -58,9 +58,62 @@
       <canvas id="chart-commitpay" height="140"></canvas>
     </div>
 
+
+    <!-- รายละเอียดโครงการ -->
+    <div class="card">
+      <div class="card-title">รายละเอียดโครงการ</div>
+      <div class="project-search-row">
+        <input id="p2-project-search" type="text" placeholder="ค้นหาโครงการ..." autocomplete="off">
+        <button id="p2-toggle-list-btn" class="toggle-list-btn">▲</button>
+      </div>
+      <div class="project-filter-row" id="p2-filter-row">
+        <button class="filter-btn active" data-filter="all">ทั้งหมด</button>
+        <button class="filter-btn" data-filter="ประจำปี">ประจำปี</button>
+        <button class="filter-btn" data-filter="ผูกดำ">ผูกดำ</button>
+        <button class="filter-btn" data-filter="ผูกจ่าย">ผูกจ่าย</button>
+      </div>
+      <div id="p2-project-list" class="project-list"></div>
+      <div id="p2-project-detail" class="project-detail hidden"></div>
+
+      <div id="p2-proc-section" class="proc-section hidden">
+        <div class="card-title" style="margin:0">ขั้นตอนการจัดจ้าง</div>
+        <div id="p2-proc-stepper-mini"></div>
+        <div id="p2-proc-latest-wrap"></div>
+      </div>
+
+      <div id="p2-project-table-wrap" class="hidden">
+        <div class="card-title title-pc" style="margin-top:1rem">เป้าจ่าย vs จ่ายจริง รายเดือน (สะสม)</div>
+        <div class="card-title title-responsive" style="margin-top:1rem">เป้าจ่าย vs จ่ายจริง รายเดือน (สะสม) — หน่วย ลบ.</div>
+        <div class="table-scroll table-desktop">
+          <table id="p2-project-monthly-table" class="monthly-table"></table>
+        </div>
+        <div class="table-swipe table-mobile" id="p2-table-swipe">
+          <div class="table-panel">
+            <div class="table-scroll">
+              <table id="p2-project-monthly-table-1" class="monthly-table"></table>
+            </div>
+          </div>
+          <div class="table-panel">
+            <div class="table-scroll">
+              <table id="p2-project-monthly-table-2" class="monthly-table"></table>
+            </div>
+          </div>
+        </div>
+        <div class="swipe-dots table-mobile">
+          <span class="swipe-dot active"></span>
+          <span class="swipe-dot"></span>
+        </div>
+        <div class="table-row-legend table-mobile">
+          <span>แถว 1 = เป้าสะสม</span>
+          <span>แถว 2 = จ่ายจริง</span>
+          <span>แถว 3 = ส่วนต่าง</span>
+        </div>
+      </div>
+    </div>
+
   </main>
 
-  <script src="js/data.js?v=20260429"></script>
-  <script src="js/page2.js?v=20260429"></script>
+  <script src="js/data.js?v=20260430"></script>
+  <script src="js/page2.js?v=20260430"></script>
 </body>
 </html>

@@ -231,6 +231,7 @@ function renderKPIMini(containerId, projects, lastUpdatedMonth) {
 }
 
 function renderAll2(data) {
+  p2GlobalData = data;
   renderSummaryRow(data);
 
   const CATS = [
@@ -245,12 +246,297 @@ function renderAll2(data) {
     renderCategoryChart(c.chartId, filtered, data.lastUpdatedMonth);
   });
 
+  p2_populateProjectSelect(data.projects);
+
   // แสดงวันที่อัปเดตล่าสุด
   const m  = data.lastUpdatedMonth || 1;
   const ce = (data.year || 2569) - 543;
   const lastDay = new Date(ce, m, 0).getDate();
-  document.getElementById('last-updated2').textContent =
-    `อัพเดต: ณ วันที่ ${lastDay} ${MONTHS_TH2[m - 1]} ${data.year}`;
+  // last-updated2 ถูกเอาออกจาก UI แล้ว
+}
+
+// ── Project detail card ───────────────────────────────────────
+let p2GlobalData   = null;
+let p2ActiveFilter = 'all';
+let p2_renderListFn = null;
+
+function p2_projectDiff(p) {
+  const m = p2GlobalData?.lastUpdatedMonth;
+  if (!m) return 0;
+  let planned = 0, actual = 0;
+  for (let i = 0; i < m; i++) {
+    planned += (p.planned[i] || 0);
+    actual  += (p.actual[i]  || 0);
+  }
+  return actual - planned;
+}
+
+function p2_populateProjectSelect(projects) {
+  const listEl   = document.getElementById('p2-project-list');
+  const searchEl = document.getElementById('p2-project-search');
+  let activeId   = null;
+
+  function renderList() {
+    const q = searchEl.value.trim().toLowerCase();
+    let filtered = q ? projects.filter(p => p.name.toLowerCase().includes(q)) : [...projects];
+    if (p2ActiveFilter !== 'all') {
+      filtered = filtered.filter(p => p.budgetCategory && p.budgetCategory.includes(p2ActiveFilter));
+    }
+
+    listEl.innerHTML = '';
+    if (!filtered.length) {
+      listEl.innerHTML = '<div class="project-list-empty">ไม่พบโครงการ</div>';
+      return;
+    }
+    filtered.forEach(p => {
+      const diff = p2_projectDiff(p);
+      const item = document.createElement('div');
+      item.className = 'project-list-item' + (p.id === activeId ? ' active' : '');
+      item.dataset.id = p.id;
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = p.name;
+
+      const badge = document.createElement('span');
+      badge.className = 'project-diff-badge ' + (diff < 0 ? 'badge-behind' : 'badge-ahead');
+      badge.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2);
+
+      item.appendChild(nameSpan);
+      item.appendChild(badge);
+      item.addEventListener('click', () => {
+        activeId = p.id;
+        renderList();
+        p2_renderProjectDetail(p);
+        p2_loadAndRenderProcurement(p.name);
+        p2_renderMonthlyTable(p);
+        if (window.innerWidth > 540) {
+          document.getElementById('p2-project-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      });
+      listEl.appendChild(item);
+    });
+  }
+
+  p2_renderListFn = renderList;
+  renderList();
+  searchEl.addEventListener('input', renderList);
+}
+
+function p2_renderProjectDetail(p) {
+  const el = document.getElementById('p2-project-detail');
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <div class="detail-project-name">${p.name}</div>
+    <div class="detail-item">
+      <div class="detail-label">ประเภท</div>
+      <div class="detail-value">${p.type}</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">งบ (ลบ.)</div>
+      <div class="detail-value">${p.budget.toFixed(3)}</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">เลข WBS</div>
+      <div class="detail-value">${p.wbs}</div>
+    </div>
+    <div class="detail-contract-row">
+      <div class="detail-item">
+        <div class="detail-label">เลขที่สัญญา</div>
+        <div class="detail-value">${p.contract}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">วันเริ่มสัญญา</div>
+        <div class="detail-value">${p.startDate}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">วันสิ้นสุดสัญญา</div>
+        <div class="detail-value">${p.endDate}</div>
+      </div>
+    </div>
+  `;
+}
+
+function p2_renderMonthlyTable(p) {
+  const wrap = document.getElementById('p2-project-table-wrap');
+  wrap.classList.remove('hidden');
+
+  const cumPlanned = cumul2(p.planned);
+  const cumActual  = cumul2(p.actual);
+  const lum = p2GlobalData?.lastUpdatedMonth || 0;
+  const dec = window.innerWidth <= 540 ? 2 : 3;
+
+  function buildTable(indices) {
+    let html = '<thead><tr><th>รายการ</th>';
+    indices.forEach(i => { html += `<th>${MONTHS_TH2[i]}</th>`; });
+    html += '</tr></thead><tbody>';
+
+    html += '<tr><td class="row-label">เป้าสะสม</td>';
+    indices.forEach(i => { html += `<td>${cumPlanned[i].toFixed(dec)}</td>`; });
+    html += '</tr>';
+
+    html += '<tr><td class="row-label">จ่ายจริง</td>';
+    indices.forEach(i => {
+      html += `<td>${i < lum ? cumActual[i].toFixed(dec) : '—'}</td>`;
+    });
+    html += '</tr>';
+
+    html += '<tr><td class="row-label">ส่วนต่าง</td>';
+    indices.forEach(i => {
+      if (i >= lum) { html += '<td>—</td>'; return; }
+      const diff = cumActual[i] - cumPlanned[i];
+      html += `<td class="${diff < 0 ? 'behind' : 'ahead'}">${diff >= 0 ? '+' : ''}${diff.toFixed(dec)}</td>`;
+    });
+    html += '</tr></tbody>';
+    return html;
+  }
+
+  // PC table (12 เดือน)
+  let full = '<thead><tr><th>รายการ</th>';
+  MONTHS_TH2.forEach(m => { full += `<th>${m}</th>`; });
+  full += '</tr></thead><tbody>';
+  full += '<tr><td class="row-label">เป้าสะสม (ลบ.)</td>';
+  cumPlanned.forEach(v => { full += `<td>${v.toFixed(3)}</td>`; });
+  full += '</tr><tr><td class="row-label">จ่ายจริงสะสม (ลบ.)</td>';
+  cumActual.forEach((v, i) => { full += `<td>${i < lum ? v.toFixed(3) : '—'}</td>`; });
+  full += '</tr><tr><td class="row-label">ส่วนต่าง (ลบ.)</td>';
+  cumPlanned.forEach((v, i) => {
+    if (i >= lum) { full += '<td>—</td>'; return; }
+    const diff = cumActual[i] - v;
+    full += `<td class="${diff < 0 ? 'behind' : 'ahead'}">${diff >= 0 ? '+' : ''}${diff.toFixed(3)}</td>`;
+  });
+  full += '</tr></tbody>';
+  document.getElementById('p2-project-monthly-table').innerHTML = full;
+
+  // Mobile swipe
+  document.getElementById('p2-project-monthly-table-1').innerHTML = buildTable([0,1,2,3,4,5]);
+  document.getElementById('p2-project-monthly-table-2').innerHTML = buildTable([6,7,8,9,10,11]);
+
+  const swipe = document.getElementById('p2-table-swipe');
+  const dots  = document.querySelectorAll('#p2-project-table-wrap .swipe-dot');
+  dots.forEach((d, i) => {
+    d.addEventListener('click', () => { swipe.scrollTo({ left: i * swipe.offsetWidth, behavior: 'smooth' }); });
+  });
+  swipe.onscroll = () => {
+    const idx = Math.round(swipe.scrollLeft / swipe.offsetWidth);
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+  };
+}
+
+// ── Procurement card (page2) ──────────────────────────────────
+const P2_PROC_STEP_NAMES = [
+  { id: 1, label: 'สร้าง/ประกาศแผน' },
+  { id: 2, label: 'ขอความเห็นชอบ' },
+  { id: 3, label: 'ขออนุมัติ TOR',     parallel: true },
+  { id: 4, label: 'ขออนุมัติราคากลาง', parallel: true },
+  { id: 5, label: 'รายงานขอจ้าง' },
+  { id: 6, label: 'พิจารณาผล' },
+  { id: 7, label: 'ลงนามสัญญา' },
+];
+
+function p2_esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function p2_procCls(id, sd) {
+  const done = n => sd[n]?.status === 'เรียบร้อย';
+  const ok = id === 1 ? true : id === 2 ? done(1) : id === 3 ? done(2)
+           : id === 4 ? done(2) : id === 5 ? done(3) && done(4)
+           : id === 6 ? done(5) : id === 7 ? done(6) : false;
+  if (!ok) return 'snode-locked';
+  const s = sd[id]?.status;
+  if (s === 'เรียบร้อย')       return 'snode-done';
+  if (s === 'กำลังดำเนินการ') return 'snode-inprogress';
+  if (s === 'รออนุมัติ')       return 'snode-waiting';
+  return 'snode-available';
+}
+
+function p2_renderProcCard(stepData, mgmtData) {
+  const done  = n => stepData[n]?.status === 'เรียบร้อย';
+  const mnode = step => {
+    const cls = p2_procCls(step.id, stepData);
+    return `<div class="proc-mnode ${cls}">
+      <div class="proc-mnode-circle">${cls === 'snode-done' ? '✓' : step.id}</div>
+      <div class="proc-mnode-label">${p2_esc(step.label)}</div>
+    </div>`;
+  };
+  const mconn = on => `<div class="proc-mconn${on ? ' proc-mconn-on' : ''}"></div>`;
+
+  document.getElementById('p2-proc-stepper-mini').innerHTML = `
+    <div class="proc-mini">
+      ${mnode(P2_PROC_STEP_NAMES[0])}${mconn(done(1))}
+      ${mnode(P2_PROC_STEP_NAMES[1])}${mconn(done(2))}
+      <div class="proc-mparallel">
+        <div class="proc-mparallel-label">ทำพร้อมกัน</div>
+        <div class="proc-mparallel-inner">
+          ${mnode(P2_PROC_STEP_NAMES[2])}${mnode(P2_PROC_STEP_NAMES[3])}
+        </div>
+      </div>
+      ${mconn(done(3) && done(4))}
+      ${mnode(P2_PROC_STEP_NAMES[4])}${mconn(done(5))}
+      ${mnode(P2_PROC_STEP_NAMES[5])}${mconn(done(6))}
+      ${mnode(P2_PROC_STEP_NAMES[6])}
+    </div>`;
+
+  const latestEl  = document.getElementById('p2-proc-latest-wrap');
+  const STATE_CLS = { 'กำลังดำเนินการ': 'state-inprogress', 'รออนุมัติ': 'state-waiting', 'เรียบร้อย': 'state-done' };
+
+  let latest = null;
+  for (let id = 7; id >= 1; id--) {
+    if (stepData[id]?.status) { latest = { step: P2_PROC_STEP_NAMES[id - 1], data: stepData[id] }; break; }
+  }
+
+  if (mgmtData?.updatedAt) {
+    latestEl.innerHTML = `
+      <div class="proc-latest state-done">
+        <div class="proc-latest-header">
+          <span class="proc-latest-step">บริหารโครงการ</span>
+          <span class="proc-status-pill state-done">${mgmtData.percent || 0}% ความคืบหน้า</span>
+        </div>
+        ${mgmtData.details ? `<div class="proc-latest-notes">${p2_esc(mgmtData.details)}</div>` : ''}
+        ${mgmtData.updatedAt ? `<div class="proc-latest-time">อัพเดต: ${p2_esc(mgmtData.updatedAt)}</div>` : ''}
+      </div>`;
+  } else if (latest) {
+    const { step, data } = latest;
+    const sCls = STATE_CLS[data.status] || '';
+    latestEl.innerHTML = `
+      <div class="proc-latest ${sCls}">
+        <div class="proc-latest-header">
+          <span class="proc-latest-step">ขั้นที่ ${step.id} — ${p2_esc(step.label)}</span>
+          <span class="proc-status-pill ${sCls}">${p2_esc(data.status)}</span>
+        </div>
+        ${data.details ? `<div class="proc-latest-notes">${p2_esc(data.details)}</div>` : ''}
+        ${data.updatedAt ? `<div class="proc-latest-time">อัพเดต: ${p2_esc(data.updatedAt)}</div>` : ''}
+      </div>`;
+  } else {
+    latestEl.innerHTML = '<div class="proc-no-data">ยังไม่มีข้อมูลขั้นตอนการจัดจ้าง</div>';
+  }
+}
+
+async function p2_loadAndRenderProcurement(projectName) {
+  const section = document.getElementById('p2-proc-section');
+  section.classList.remove('hidden');
+  document.getElementById('p2-proc-stepper-mini').innerHTML =
+    '<div class="proc-loading">กำลังโหลดสถานะ...</div>';
+  document.getElementById('p2-proc-latest-wrap').innerHTML = '';
+
+  let stepData = {}, mgmtData = {};
+  try {
+    const url = `${GAS_URL}?action=getProcurementStatus&project=${encodeURIComponent(projectName)}`;
+    const res  = await fetch(url);
+    if (res.ok) {
+      const json = await res.json();
+      (json.steps || []).forEach(s => {
+        if (s.step === 'บริหารโครงการ') {
+          mgmtData = { percent: parseInt(s.status) || 0, details: s.details, updatedAt: s.updatedAt };
+        } else {
+          stepData[s.step] = { status: s.status, details: s.details, updatedAt: s.updatedAt };
+        }
+      });
+    }
+  } catch { /* GAS อาจยังไม่รองรับ */ }
+
+  p2_renderProcCard(stepData, mgmtData);
 }
 
 async function init2() {
@@ -259,8 +545,31 @@ async function init2() {
     renderAll2(data);
   } catch (err) {
     console.warn('โหลดข้อมูลไม่ได้:', err);
-    document.getElementById('last-updated2').textContent = '⚠ ไม่สามารถโหลดข้อมูลได้';
+    console.warn('⚠ ไม่สามารถโหลดข้อมูลได้');
   }
 }
 
-document.addEventListener('DOMContentLoaded', init2);
+document.addEventListener('DOMContentLoaded', () => {
+  init2();
+
+  // Toggle project list
+  const p2ListEl    = document.getElementById('p2-project-list');
+  const p2ToggleBtn = document.getElementById('p2-toggle-list-btn');
+  if (p2ListEl && p2ToggleBtn) {
+    p2ToggleBtn.addEventListener('click', () => {
+      const hidden = p2ListEl.classList.toggle('hidden');
+      p2ToggleBtn.textContent = hidden ? '▼' : '▲';
+    });
+  }
+
+  // Category filter buttons
+  const p2FilterBtns = document.querySelectorAll('#p2-filter-row .filter-btn');
+  p2FilterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      p2ActiveFilter = btn.dataset.filter;
+      p2FilterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (p2_renderListFn) p2_renderListFn();
+    });
+  });
+});

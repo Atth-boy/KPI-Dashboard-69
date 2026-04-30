@@ -22,6 +22,13 @@ let currentProject = null;
 let stepData       = {};   // { stepId: { status, details, updatedAt } }
 let activeStepId   = null;
 let mgmtData       = { percent: '', details: '', updatedAt: '' };
+let activeFilter   = 'all';  // 'all' | 'project' | 'purchase'
+
+function matchesFilter(p) {
+  if (activeFilter === 'project')  return (p.id >= 2 && p.id <= 14) || (p.id >= 26 && p.id <= 43);
+  if (activeFilter === 'purchase') return p.id >= 15 && p.id <= 25;
+  return true;
+}
 
 const THAI_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
                      'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -339,7 +346,7 @@ let _allProjects = [];
 function renderProjectList() {
   const listEl  = document.getElementById('project-list');
   const q       = document.getElementById('project-search').value.trim().toLowerCase();
-  const filtered = _allProjects.filter(p => !q || p.name.toLowerCase().includes(q));
+  const filtered = _allProjects.filter(p => matchesFilter(p) && (!q || p.name.toLowerCase().includes(q)));
 
   if (!filtered.length) {
     listEl.innerHTML = '<div class="project-list-empty">ไม่พบโครงการ</div>';
@@ -394,6 +401,16 @@ async function loadProjects() {
     _allProjects = data.projects;
     renderProjectList();
     searchEl.addEventListener('input', renderProjectList);
+
+    // Filter buttons
+    document.querySelectorAll('.up-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeFilter = btn.dataset.filter;
+        document.querySelectorAll('.up-filter-btn').forEach(b => b.classList.remove('up-filter-active'));
+        btn.classList.add('up-filter-active');
+        renderProjectList();
+      });
+    });
 
     // แสดง list เมื่อ focus ที่ search (ถ้า list ยุบอยู่)
     searchEl.addEventListener('focus', () => {

@@ -53,7 +53,7 @@ async function fetchSheetData() {
   if (typeof json.lastUpdatedMonth !== 'number') json.lastUpdatedMonth = 0;
 
   json.projects.forEach(p => {
-    if (!p.planned || !p.planned.some(v => v > 0)) {
+    if (!Array.isArray(p.planned) || p.planned.length !== 12) {
       p.planned = calcPlanned(p.budget || 0, p.startDate, p.endDate);
     }
     if (!p.actual) p.actual = Array(12).fill(0);

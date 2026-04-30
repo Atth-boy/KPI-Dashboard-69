@@ -43,7 +43,7 @@ header h1 {
   letter-spacing: 0.01em;
 }
 header h1 span { color: var(--orange); }
-.header-meta { font-size: 0.78rem; color: var(--gray-500); }
+.header-meta { font-size: 0.78rem; color: var(--gray-500); display: flex; align-items: center; gap: 1rem; }
 
 /* ── Layout ── */
 main {
@@ -217,6 +217,7 @@ main {
 .filter-btn.filter-behind.active { background: #ef4444; color: #fff; }
 .filter-btn.filter-ahead.active  { background: #16a34a; color: #fff; }
 .filter-btn.filter-all.active    { background: var(--gray-700); color: #fff; border-color: var(--gray-700); }
+.filter-btn.active               { background: var(--gray-700); color: #fff; border-color: var(--gray-700); }
 
 .project-diff-badge {
   flex-shrink: 0;
@@ -557,6 +558,33 @@ main {
   font-size: 0.75rem;
   color: #ef4444;
 }
+
+/* ── Filter row ── */
+.up-filter-row {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+.up-filter-btn {
+  padding: 0.3rem 1rem;
+  border-radius: 20px;
+  border: 1.5px solid var(--gray-300);
+  background: var(--gray-100);
+  color: var(--gray-600);
+  font-size: 0.8rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.up-filter-btn:hover { border-color: var(--orange); color: var(--orange-dark); }
+.up-filter-active {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #fff;
+}
+.up-filter-active:hover { background: var(--orange-dark); border-color: var(--orange-dark); color: #fff; }
 
 /* ── Selector card ── */
 .up-selector-card {}
@@ -995,6 +1023,147 @@ main {
   .mgmt-slider    { min-width: unset; max-width: 100%; }
   .mgmt-pct-box   { justify-content: center; }
   .mgmt-num       { font-size: 16px; }
+}
+
+/* ── Procurement mini card (index.html, read-only) ── */
+.kpi-last-updated {
+  font-size: 0.72rem;
+  color: var(--gray-400);
+  margin-top: 0.4rem;
+}
+.proc-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gray-200);
+}
+
+/* Mini stepper row */
+.proc-mini {
+  display: flex;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.proc-mnode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 50px;
+  flex-shrink: 0;
+}
+.proc-mnode-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--gray-300);
+  background: var(--gray-100);
+  color: var(--gray-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.proc-mnode-label {
+  font-size: 0.52rem;
+  color: var(--gray-500);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 52px;
+  word-break: break-word;
+}
+.proc-mconn {
+  flex: 1;
+  min-width: 8px;
+  height: 2px;
+  background: var(--gray-200);
+  margin-top: 13px;
+  flex-shrink: 0;
+}
+.proc-mconn-on { background: #22c55e; }
+
+/* Parallel block */
+.proc-mparallel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 3px;
+}
+.proc-mparallel-label {
+  font-size: 0.46rem;
+  color: var(--gray-400);
+  text-align: center;
+}
+.proc-mparallel-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+/* State colors for mini nodes */
+.proc-mnode.snode-done .proc-mnode-circle        { border-color: #22c55e; background: #f0fdf4; color: #15803d; }
+.proc-mnode.snode-inprogress .proc-mnode-circle  { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
+.proc-mnode.snode-waiting .proc-mnode-circle     { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+.proc-mnode.snode-available .proc-mnode-circle   { border-color: var(--orange); background: var(--orange-light); color: var(--orange-dark); }
+.proc-mnode.snode-locked .proc-mnode-label       { color: var(--gray-300); }
+.proc-mnode.snode-done .proc-mnode-label         { color: #16a34a; }
+
+/* Latest step summary */
+.proc-latest {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--gray-100);
+  border-radius: 8px;
+  border-left: 3px solid var(--gray-300);
+}
+.proc-latest.state-inprogress { border-left-color: #3b82f6; }
+.proc-latest.state-waiting    { border-left-color: #f59e0b; }
+.proc-latest.state-done       { border-left-color: #22c55e; }
+.proc-latest-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+}
+.proc-latest-step {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+.proc-status-pill {
+  font-size: 0.63rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.proc-status-pill.state-inprogress { background: #eff6ff; color: #1d4ed8; }
+.proc-status-pill.state-waiting    { background: #fffbeb; color: #92400e; }
+.proc-status-pill.state-done       { background: #f0fdf4; color: #15803d; }
+.proc-latest-notes {
+  font-size: 0.75rem;
+  color: var(--gray-600, var(--gray-700));
+  white-space: pre-wrap;
+  margin: 0.3rem 0 0.2rem;
+  line-height: 1.5;
+}
+.proc-latest-time {
+  font-size: 0.67rem;
+  color: var(--gray-400);
+}
+.proc-no-data {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+.proc-loading {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+  padding: 0.4rem 0;
 }
 
 /* ── End Update Page styles ── */
