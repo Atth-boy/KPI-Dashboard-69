@@ -6,7 +6,7 @@
 
 # Documentation และ script ภายใน (local only)
 CLAUDE.md
-gas/
+
 
 # Dependencies
 node_modules/

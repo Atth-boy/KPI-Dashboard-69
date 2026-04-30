@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>อัพเดทสถานะโครงการ — Dashboard งบลงทุน</title>
+  <link rel="stylesheet" href="css/style.css?v=20260429">
+</head>
+<body>
+
+  <header>
+    <div class="header-title">
+      <h1>อัพเดทสถานะโครงการ<br><span>ฝ่ายควบคุมระบบไฟฟ้า</span></h1>
+    </div>
+    <div class="header-meta">
+      <a href="index.html" class="back-link">← กลับ Dashboard</a>
+    </div>
+  </header>
+
+  <div class="update-page">
+
+    <!-- ── เลือกโครงการ ── -->
+    <div class="card up-selector-card">
+      <div class="card-title">เลือกโครงการ</div>
+      <div class="up-selector-top">
+        <div class="project-search-row up-search-row">
+          <input id="project-search" type="text" placeholder="ค้นหาโครงการ..." autocomplete="off">
+          <button id="toggle-list-btn" class="toggle-list-btn">▲</button>
+        </div>
+        <div id="up-loading" class="up-loading-badge" style="display:none">
+          <span class="up-loading-dot"></span>กำลังโหลดสถานะ...
+        </div>
+      </div>
+      <div id="project-list" class="project-list up-project-list"></div>
+      <div id="up-load-err" class="up-load-err" style="display:none"></div>
+    </div>
+
+    <!-- ── Workflow (hidden until project selected) ── -->
+    <div id="workflow-section" style="display:none">
+
+      <!-- Stepper -->
+      <div class="card up-stepper-card">
+        <div class="card-title">ขั้นตอนการจัดจ้าง</div>
+        <div class="up-stepper-scroll">
+          <div class="up-stepper" id="stepper"></div>
+        </div>
+        <p class="up-stepper-hint">คลิกที่ขั้นตอนที่พร้อมใช้งานเพื่อดู/แก้ไขรายละเอียด</p>
+      </div>
+
+      <!-- Step detail panel -->
+      <div class="card up-detail-card" id="step-detail-card" style="display:none">
+        <div class="up-detail-header" id="detail-header"></div>
+        <div class="up-detail-body">
+          <div class="up-field">
+            <label class="up-field-label">สถานะ</label>
+            <div class="up-status-opts" id="status-options"></div>
+          </div>
+          <div class="up-field">
+            <label class="up-field-label">รายละเอียด / บันทึก</label>
+            <textarea id="step-notes" class="up-notes" rows="4"
+              placeholder="ระบุรายละเอียดเพิ่มเติม เช่น เลขหนังสือ, ผู้รับผิดชอบ, วันที่สำคัญ..."></textarea>
+          </div>
+          <div class="up-detail-actions">
+            <button class="up-btn-save" id="btn-save">บันทึก</button>
+            <button class="up-btn-cancel" id="btn-cancel">ยกเลิก</button>
+            <span class="up-save-status" id="save-status"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- บริหารโครงการ (unlocks after step 7) -->
+      <div class="card up-mgmt-card" id="mgmt-card" style="display:none">
+        <div class="card-title">บริหารโครงการ</div>
+        <div id="mgmt-body"></div>
+      </div>
+
+    </div><!-- /workflow-section -->
+
+  </div><!-- /update-page -->
+
+  <script src="js/data.js?v=20260429"></script>
+  <script src="js/update.js?v=20260429"></script>
+</body>
+</html>

@@ -1,59 +1,152 @@
 var BUDGET_SHEET   = 'กรอกรายการงบประมาณ';
 var PLANNED_SHEET  = 'งบประมาณ เป้า-จ่ายจริง';
-var DETAIL_SHEET   = 'รายละเอียดโครงการ'; // col A = ชื่อโครงการ, col D = ประเภทงบ (ประจำปี/ผูกดำ/ผูกจ่าย)
+var DETAIL_SHEET   = 'รายละเอียดโครงการ';
+var PROCURE_SHEET  = 'สถานะกระบวนการจัดจ้าง';   // ← tab ใหม่ (สร้างอัตโนมัติ)
 var SPREADSHEET_ID = '12tNI9JBrwubtRPmL9xFjKt_ncehe7NNF2EkOlBYKSkk';
 var FISCAL_YEAR_BE = 2569;
 var FISCAL_YEAR_CE = FISCAL_YEAR_BE - 543;  // 2026
 
+// ════════════════════════════════════════════════════════════
+//  doGet  —  GET requests (dashboard data + procurement status)
+// ════════════════════════════════════════════════════════════
 function doGet(e) {
-  var data = buildData();
-  return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+  var action = e && e.parameter ? e.parameter.action : '';
+
+  if (action === 'getProcurementStatus') {
+    var project = (e.parameter.project || '').trim();
+    var result  = getProcurementStatus(project);
+    return jsonResponse(result);
+  }
+
+  // default: dashboard data (หน้าหลัก index.html / page2.html)
+  return jsonResponse(buildData());
 }
 
+// ════════════════════════════════════════════════════════════
+//  doPost  —  POST requests (บันทึกสถานะ / % งาน)
+// ════════════════════════════════════════════════════════════
+function doPost(e) {
+  try {
+    var body = JSON.parse(e.postData.contents);
+
+    if (body.action === 'saveProcurementStatus') {
+      saveProcurementStatus(
+        String(body.project || '').trim(),
+        String(body.step    || '').trim(),
+        String(body.status  || '').trim(),
+        String(body.details || '').trim()
+      );
+      return jsonResponse({ ok: true });
+    }
+
+    return jsonResponse({ ok: false, error: 'unknown action' });
+  } catch (err) {
+    return jsonResponse({ ok: false, error: String(err) });
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  Procurement functions
+// ════════════════════════════════════════════════════════════
+
+// อ่านสถานะทุกขั้นตอนของโครงการที่เลือก
+function getProcurementStatus(projectName) {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = getOrCreateProcureSheet(ss);
+  var rows  = sheet.getDataRange().getValues();
+  var steps = [];
+
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    if (String(r[0] || '').trim() !== projectName) continue;
+    steps.push({
+      step:      r[1],                          // ขั้นที่ (1-7 หรือ "บริหารโครงการ")
+      status:    String(r[2] || '').trim(),
+      details:   String(r[3] || '').trim(),
+      updatedAt: String(r[4] || '').trim()
+    });
+  }
+
+  return { steps: steps };
+}
+
+// บันทึก / อัพเดทสถานะขั้นตอน (upsert: หาแถวที่มีอยู่ก่อน ถ้าไม่มีค่อย append)
+function saveProcurementStatus(projectName, step, status, details) {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = getOrCreateProcureSheet(ss);
+  var rows  = sheet.getDataRange().getValues();
+  var now   = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
+
+  for (var i = 1; i < rows.length; i++) {
+    var proj = String(rows[i][0] || '').trim();
+    var stp  = String(rows[i][1] || '').trim();
+    if (proj === projectName && stp === step) {
+      // อัพเดทแถวเดิม (col C=สถานะ, D=รายละเอียด, E=วันที่)
+      sheet.getRange(i + 1, 3, 1, 3).setValues([[status, details, now]]);
+      return;
+    }
+  }
+
+  // ไม่มีแถวเดิม → เพิ่มแถวใหม่
+  sheet.appendRow([projectName, step, status, details, now]);
+}
+
+// สร้าง tab ถ้ายังไม่มี (พร้อม header + freeze row)
+function getOrCreateProcureSheet(ss) {
+  var sheet = ss.getSheetByName(PROCURE_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(PROCURE_SHEET);
+    var headers = [['ชื่อโครงการ', 'ขั้นที่', 'สถานะ', 'รายละเอียด', 'วันที่อัพเดท']];
+    sheet.getRange(1, 1, 1, 5).setValues(headers).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    sheet.setColumnWidth(1, 200);
+    sheet.setColumnWidth(4, 280);
+  }
+  return sheet;
+}
+
+// ════════════════════════════════════════════════════════════
+//  Dashboard data (ไม่เปลี่ยน)
+// ════════════════════════════════════════════════════════════
 function buildData() {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
   var budgetRows  = getSheetValues(ss, BUDGET_SHEET);
   var plannedRows = getSheetValues(ss, PLANNED_SHEET);
 
-  // อ่าน budgetCategory จาก tab รายละเอียดโครงการ (col A = ชื่อ, col D = ประเภทงบ)
   var detailRows  = getSheetValues(ss, DETAIL_SHEET);
   var categoryMap = {};
   for (var di = 1; di < detailRows.length; di++) {
     var dr   = detailRows[di];
-    var dKey = String(dr[1] || '').trim(); // col B = หมายเลขโครงการ
-    var dCat = String(dr[3] || '').trim(); // col D = ประเภทงบ
+    var dKey = String(dr[1] || '').trim();
+    var dCat = String(dr[3] || '').trim();
     if (dKey) categoryMap[dKey] = dCat;
   }
 
-  // ---- อ่านข้อมูลจาก planned sheet (Power BI style) ----
-  var monthlyMap = {};  // key = projNo, value = { planned:[12], actual:[12] }
-  var monthDays  = {}; // cal index → วันที่จาก col C (เก็บไว้แสดง "ณ วันที่ XX")
+  var monthlyMap = {};
+  var monthDays  = {};
 
   plannedRows.forEach(function(r, idx) {
-    if (idx === 0) return;                   // ข้าม header
-    var pNo     = String(r[1] || '').trim(); // col B: หมายเลขโครงการ
-    var dateVal = r[2];                      // col C: Date object จาก Sheets
-    var plan    = toFloat(r[3]);             // col D: เป้าจ่าย (ลบ.)
-    var act     = toFloat(r[4]);             // col E: จ่ายจริง (ลบ.)
+    if (idx === 0) return;
+    var pNo     = String(r[1] || '').trim();
+    var dateVal = r[2];
+    var plan    = toFloat(r[3]);
+    var act     = toFloat(r[4]);
 
     if (!pNo || !(dateVal instanceof Date)) return;
 
-    // ใช้ calendar month index ตรงๆ (ม.ค.=0, ก.พ.=1, ..., ธ.ค.=11)
-    var cal = dateVal.getMonth();           // 0-based: Jan=0 ... Dec=11
+    var cal = dateVal.getMonth();
     var yr  = dateVal.getFullYear();
-    if (yr !== FISCAL_YEAR_CE) return;     // เอาเฉพาะปี ค.ศ. นี้ (2026)
+    if (yr !== FISCAL_YEAR_CE) return;
 
     if (!monthlyMap[pNo]) {
       monthlyMap[pNo] = { planned: Array(12).fill(0), actual: Array(12).fill(0) };
     }
     monthlyMap[pNo].planned[cal] += plan;
     monthlyMap[pNo].actual[cal]  += act;
-    monthDays[cal] = dateVal.getDate(); // เก็บวันที่ของเดือนนี้
+    monthDays[cal] = dateVal.getDate();
   });
 
-  // ---- ประกอบโครงการ ----
   var projects = [];
   var lastUpdatedMonth = 0;
 
@@ -72,13 +165,9 @@ function buildData() {
     var actual, planned;
 
     if (hasPlannedData) {
-      // ---- ใช้ข้อมูลจาก planned sheet ----
       actual  = pData.actual;
       planned = pData.planned;
     } else {
-      // ---- fallback: อ่าน actual จาก budget sheet cols H-S (index 7-18) ----
-      // cols เก็บยอดจ่ายสะสม (บาท) เรียง ม.ค.-ธ.ค. (calendar year)
-      // ต้องแปลงเป็น fiscal month order (index 0=ต.ค., ..., 11=ก.ย.)
       var calCum = [];
       for (var m = 0; m < 12; m++) calCum.push(toFloat(r[7 + m]));
 
@@ -91,7 +180,6 @@ function buildData() {
       planned = pData ? pData.planned : Array(12).fill(0);
     }
 
-    // หาเดือนล่าสุดที่มีข้อมูล
     for (var m = 11; m >= 0; m--) {
       if (actual[m] > 0) {
         lastUpdatedMonth = Math.max(lastUpdatedMonth, m + 1);
@@ -123,16 +211,12 @@ function buildData() {
   };
 }
 
-// ---- ฟังก์ชันทดสอบ: รันใน Apps Script แล้วดู Log ----
-function testData() {
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  Logger.log('Sheets: ' + ss.getSheets().map(function(s){ return s.getName(); }).join(', '));
-
-  var rows = getSheetValues(ss, PLANNED_SHEET);
-  Logger.log('Planned rows: ' + rows.length);
-  rows.slice(0, 5).forEach(function(r, i) {
-    Logger.log('row ' + i + ': colB=' + r[1] + ' colC=' + r[2] + ' colD=' + r[3] + ' colE=' + r[4]);
-  });
+// ════════════════════════════════════════════════════════════
+//  Utilities
+// ════════════════════════════════════════════════════════════
+function jsonResponse(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function getSheetValues(ss, name) {
@@ -152,3 +236,22 @@ function formatDateBE(v) {
 }
 
 function pad(n) { return String(n).padStart(2, '0'); }
+
+// ---- ฟังก์ชันทดสอบ: รันใน Apps Script แล้วดู Log ----
+function testData() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  Logger.log('Sheets: ' + ss.getSheets().map(function(s){ return s.getName(); }).join(', '));
+
+  var rows = getSheetValues(ss, PLANNED_SHEET);
+  Logger.log('Planned rows: ' + rows.length);
+  rows.slice(0, 5).forEach(function(r, i) {
+    Logger.log('row ' + i + ': colB=' + r[1] + ' colC=' + r[2] + ' colD=' + r[3] + ' colE=' + r[4]);
+  });
+}
+
+function testProcure() {
+  // ทดสอบ save แล้ว read กลับ
+  saveProcurementStatus('ทดสอบโครงการ', '1', 'เรียบร้อย', 'ทดสอบ save function');
+  var result = getProcurementStatus('ทดสอบโครงการ');
+  Logger.log(JSON.stringify(result));
+}

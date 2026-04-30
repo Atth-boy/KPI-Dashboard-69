@@ -520,6 +520,485 @@ main {
 
 /* ── End Page 2 styles ── */
 
+/* ══════════════════════════════════════════════════════════════
+   Update Page  (update.html)
+   ══════════════════════════════════════════════════════════════ */
+
+/* Back link in header */
+.back-link {
+  color: var(--gray-400);
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: color 0.15s;
+}
+.back-link:hover { color: #fff; }
+
+/* Page wrapper */
+.update-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Loading text */
+.up-loading {
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 0.85rem;
+  padding: 0.5rem 0;
+}
+
+/* Error text */
+.up-load-err {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #ef4444;
+}
+
+/* ── Selector card ── */
+.up-selector-card {}
+.up-selector-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+/* ขยาย search row ให้กว้างขึ้นกว่าหน้าหลัก */
+.up-search-row { max-width: 460px !important; width: 100%; margin-bottom: 0 !important; }
+.up-search-row input { font-size: 0.92rem; }
+/* list ของหน้า update */
+.up-project-list { max-height: 240px; margin-top: 0.4rem; }
+.up-loading-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  background: #eff6ff;
+  border: 1.5px solid #93c5fd;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+.up-loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+  animation: up-pulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes up-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+.up-project-select {
+  width: 100%;
+  max-width: 520px;
+  padding: 0.55rem 0.85rem;
+  border: 1.5px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.up-project-select:focus { border-color: var(--orange); }
+
+/* ── Stepper card ── */
+.up-stepper-card {}
+.up-stepper-scroll { overflow-x: auto; padding-bottom: 0.5rem; }
+.up-stepper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  min-width: max-content;
+  padding: 0.5rem 0.25rem 0.25rem;
+}
+.up-stepper-hint {
+  margin-top: 0.6rem;
+  font-size: 0.7rem;
+  color: var(--gray-400);
+  text-align: center;
+}
+
+/* Step node */
+.snode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 88px;
+  text-align: center;
+  padding: 8px 6px 10px;
+  border-radius: 10px;
+  transition: background 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+}
+.snode[role="button"] { cursor: pointer; }
+.snode[role="button"]:hover { background: var(--gray-100); }
+.snode-active { background: #eff6ff !important; box-shadow: 0 0 0 2px #3b82f6; }
+
+/* Circle */
+.snode-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  border: 3px solid;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+/* Step state colours */
+.snode-locked .snode-circle  { border-color: var(--gray-300); background: var(--gray-100); color: var(--gray-400); }
+.snode-available .snode-circle{ border-color: var(--orange);   background: var(--orange-light); color: var(--orange-dark); }
+.snode-inprogress .snode-circle{ border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
+.snode-waiting .snode-circle  { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+.snode-done .snode-circle     { border-color: #22c55e; background: #f0fdf4; color: #15803d; }
+
+.snode-name {
+  font-size: 0.67rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  line-height: 1.3;
+}
+.snode-locked .snode-name { color: var(--gray-400); }
+
+.snode-status {
+  font-size: 0.6rem;
+  color: var(--gray-500);
+  min-height: 14px;
+}
+.snode-locked .snode-status { color: var(--gray-300); }
+
+/* ซ่อน wrapper บน desktop — children flow เป็น flex items ตรงๆ */
+.snode-text { display: contents; }
+
+/* Connector line */
+.sconn {
+  width: 28px;
+  height: 4px;
+  background: var(--gray-200);
+  border-radius: 2px;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.sconn-on { background: #22c55e; }
+
+/* ── Parallel block ── */
+.sparallel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 2px dashed var(--gray-300);
+  border-radius: 12px;
+  padding: 6px 8px;
+  flex-shrink: 0;
+}
+.sparallel-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.sparallel-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+/* thin separator between the two parallel steps */
+.sparallel-sep {
+  height: 1px;
+  background: var(--gray-200);
+  margin: 3px 8px;
+}
+
+/* ── Detail card ── */
+.up-detail-card { margin-top: 0; }
+.up-detail-header {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.up-detail-num {
+  background: var(--orange);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.up-detail-body { display: flex; flex-direction: column; gap: 1rem; }
+
+.up-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.up-field-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Status option buttons */
+.up-status-opts { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.sup-btn {
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  border: 2px solid transparent;
+  font-size: 0.82rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+.sup-btn:hover { filter: brightness(0.95); }
+.sup-inprogress { border-color: #3b82f6; }
+.sup-inprogress.sup-sel { background: #3b82f6; color: #fff; }
+.sup-waiting { border-color: #f59e0b; }
+.sup-waiting.sup-sel { background: #f59e0b; color: #fff; }
+.sup-done { border-color: #22c55e; }
+.sup-done.sup-sel { background: #22c55e; color: #fff; }
+
+/* Notes textarea */
+.up-notes {
+  width: 100%;
+  max-width: 620px;
+  padding: 0.6rem 0.85rem;
+  border: 1.5px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  color: var(--text);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+  line-height: 1.6;
+}
+.up-notes:focus { border-color: var(--orange); }
+
+/* Actions row */
+.up-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.up-btn-save {
+  padding: 0.45rem 1.4rem;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.up-btn-save:hover:not(:disabled) { background: var(--orange-dark); }
+.up-btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+.up-btn-cancel {
+  padding: 0.45rem 1rem;
+  background: transparent;
+  color: var(--gray-500);
+  border: 1.5px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.up-btn-cancel:hover { border-color: var(--gray-500); color: var(--gray-700); }
+
+.up-save-status { font-size: 0.75rem; color: var(--gray-400); }
+.up-save-ok   { color: #16a34a; font-weight: 600; }
+.up-save-warn { color: #f59e0b; }
+
+/* ── Management card ── */
+.up-mgmt-card {}
+.up-mgmt-note {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  padding: 0.5rem 0;
+  line-height: 1.6;
+}
+
+/* ── Management card form ── */
+.mgmt-month {
+  font-size: 0.82rem;
+  color: var(--gray-500);
+  margin-bottom: 1rem;
+}
+.mgmt-month strong { color: var(--gray-900); }
+
+.mgmt-pct-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.mgmt-slider {
+  flex: 1;
+  min-width: 160px;
+  max-width: 400px;
+  height: 6px;
+  accent-color: var(--orange);
+  cursor: pointer;
+}
+
+.mgmt-pct-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mgmt-num {
+  width: 64px;
+  padding: 0.4rem 0.5rem;
+  border: 1.5px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--gray-900);
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.mgmt-num:focus { border-color: var(--orange); }
+/* ซ่อนลูกศรของ number input */
+.mgmt-num::-webkit-outer-spin-button,
+.mgmt-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.mgmt-num[type=number] { -moz-appearance: textfield; }
+
+.mgmt-pct-sign {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gray-500);
+}
+
+/* ── Update page responsive ── */
+@media (max-width: 640px) {
+  .update-page { padding: 0.6rem; gap: 0.6rem; }
+
+  /* Selector: stack ในแนวตั้ง */
+  .up-selector-top { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .up-search-row { max-width: 100% !important; }
+  .up-search-row input { font-size: 16px; } /* ป้องกัน iOS zoom */
+  .up-project-list { max-height: 200px; }
+
+  /* ── Stepper: เปลี่ยนเป็นแนวตั้ง ── */
+  .up-stepper-scroll { overflow-x: unset; padding-bottom: 0; }
+  .up-stepper {
+    flex-direction: column;
+    align-items: stretch;
+    min-width: unset;
+    padding: 0.25rem 0;
+  }
+
+  /* Step node: แนวนอน (circle ซ้าย + ข้อความขวา) */
+  .snode {
+    flex-direction: row;
+    width: auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    text-align: left;
+    min-height: 56px; /* touch target */
+  }
+  .snode-circle {
+    width: 42px;
+    height: 42px;
+    font-size: 1rem;
+    border-width: 2px;
+    flex-shrink: 0;
+  }
+  /* เปิด wrapper ให้ทำงาน (override display:contents) */
+  .snode-text {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1;
+    gap: 2px;
+  }
+  .snode-name   { font-size: 0.88rem; }
+  .snode-status { font-size: 0.72rem; min-height: unset; }
+
+  /* Connector: เส้นแนวตั้ง ชิดซ้ายตรงกลาง circle */
+  .sconn {
+    width: 3px;
+    height: 20px;
+    align-self: flex-start;
+    /* 0.85rem padding + 21px ครึ่ง circle - 1.5px ครึ่ง เส้น ≈ 32px */
+    margin-left: 32px;
+    flex-shrink: 0;
+  }
+
+  /* Parallel block: เต็มความกว้าง */
+  .sparallel {
+    align-self: stretch;
+    padding: 0 0 4px;
+    border-radius: 8px;
+  }
+  .sparallel-label { padding: 4px 0.85rem 0; font-size: 0.62rem; }
+  .sparallel-inner  { flex-direction: column; gap: 0; }
+  .sparallel-sep    { height: 1px; margin: 0 0.85rem; }
+  .sparallel .snode { border-radius: 0; padding: 0.6rem 0.85rem; min-height: 52px; }
+
+  /* ── Detail card ── */
+  .up-detail-header { font-size: 0.92rem; flex-wrap: wrap; gap: 0.4rem; }
+
+  /* Status buttons: กว้างขึ้น แตะง่ายขึ้น */
+  .up-status-opts { gap: 0.45rem; }
+  .sup-btn {
+    flex: 1;
+    min-width: calc(50% - 0.25rem);
+    padding: 0.65rem 0.5rem;
+    font-size: 0.85rem;
+    justify-content: center;
+  }
+
+  /* Textarea */
+  .up-notes { max-width: 100%; font-size: 16px; }
+
+  /* Action buttons: เต็มความกว้าง */
+  .up-detail-actions { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+  .up-btn-save   { width: 100%; padding: 0.75rem; font-size: 0.95rem; text-align: center; }
+  .up-btn-cancel { width: 100%; padding: 0.65rem; font-size: 0.9rem; text-align: center; }
+  .up-save-status { text-align: center; }
+
+  /* Mgmt: slider เต็มความกว้าง */
+  .mgmt-pct-row   { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+  .mgmt-slider    { min-width: unset; max-width: 100%; }
+  .mgmt-pct-box   { justify-content: center; }
+  .mgmt-num       { font-size: 16px; }
+}
+
+/* ── End Update Page styles ── */
+
 @media (max-width: 540px) {
   main { padding: 0.5rem; gap: 0.5rem; }
 
