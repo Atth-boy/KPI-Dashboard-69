@@ -363,24 +363,12 @@ function renderProjectList() {
 }
 
 async function selectProject(name) {
-  const listEl   = document.getElementById('project-list');
-  const toggleBtn = document.getElementById('toggle-list-btn');
-
-  // อัพเดท active
-  listEl.querySelectorAll('.project-list-item').forEach(i =>
-    i.classList.toggle('active', i.textContent === name)
-  );
-
-  // ยุบ list
-  listEl.classList.add('hidden');
-  toggleBtn.textContent = '▼';
-
-  // แสดงชื่อที่เลือกใน input
-  document.getElementById('project-search').value = name;
-
-  // Reset & load
   currentProject = name;
   activeStepId   = null;
+
+  // re-render list เพื่อ highlight item ที่เลือก (list ยังคงเปิดอยู่)
+  renderProjectList();
+
   document.getElementById('workflow-section').style.display = '';
   document.getElementById('step-detail-card').style.display = 'none';
 
@@ -412,13 +400,6 @@ async function loadProjects() {
       });
     });
 
-    // แสดง list เมื่อ focus ที่ search (ถ้า list ยุบอยู่)
-    searchEl.addEventListener('focus', () => {
-      if (listEl.classList.contains('hidden')) {
-        listEl.classList.remove('hidden');
-        toggleBtn.textContent = '▲';
-      }
-    });
   } catch (e) {
     listEl.innerHTML = '<div class="project-list-empty">โหลดไม่สำเร็จ — ตรวจสอบ GAS URL</div>';
     errEl.textContent = String(e);
