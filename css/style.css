@@ -250,7 +250,9 @@ main {
   transition: background 0.1s;
 }
 .project-list-item:last-child { border-bottom: none; }
-.project-list-item:hover { background: var(--orange-light); }
+@media (hover: hover) {
+  .project-list-item:hover { background: var(--orange-light); }
+}
 .project-list-item.active { background: var(--orange-light); }
 .project-list-empty { padding: 0.6rem 0.75rem; font-size: 0.83rem; color: var(--gray-500); }
 
@@ -665,8 +667,10 @@ main {
   font-size: 0.8em;
   font-weight: 700;
 }
-.project-list-item.proc-complete:hover {
-  color: var(--gray-500);
+@media (hover: hover) {
+  .project-list-item.proc-complete:hover {
+    color: var(--gray-500);
+  }
 }
 
 /* ── Project context banner ── */
