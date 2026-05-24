@@ -65,6 +65,21 @@ async function fetchSheetData() {
   return json;
 }
 
+// ── localStorage cache (stale-while-revalidate) ────────────────
+// เปิดเว็บซ้ำ → render จาก cache ทันที แล้วค่อยดึงสดมาทับเบื้องหลัง
+const DATA_CACHE_KEY = 'kpiDashboardData_v1';
+
+function readDataCache() {
+  try {
+    const raw = localStorage.getItem(DATA_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function writeDataCache(data) {
+  try { localStorage.setItem(DATA_CACHE_KEY, JSON.stringify(data)); } catch { /* quota/พื้นที่เต็ม — ข้าม */ }
+}
+
 // ── Summary ────────────────────────────────────────────────────
 function computeSummary(data) {
   let totalBudgetProject = 0, totalBudgetNormal = 0;

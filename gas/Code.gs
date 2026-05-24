@@ -19,7 +19,28 @@ function doGet(e) {
   }
 
   // default: dashboard data (หน้าหลัก index.html / page2.html)
-  return jsonResponse(buildData());
+  var fresh = e && e.parameter && e.parameter.nocache;   // ?nocache=1 → ข้าม cache
+  return jsonResponse(getDashboardData(!fresh));
+}
+
+// อ่าน dashboard data ผ่าน cache (5 นาที) — ลด latency ของ buildData() ที่อ่าน 4 sheet ทุกครั้ง
+// budget/planned/detail อัพเดตรายเดือน → ข้อมูลช้าได้ถึง 5 นาที ไม่กระทบการใช้งาน
+var DASHBOARD_CACHE_KEY = 'dashboardData_v1';
+var DASHBOARD_CACHE_TTL = 300;  // วินาที
+
+function getDashboardData(useCache) {
+  var cache = CacheService.getScriptCache();
+  if (useCache) {
+    var hit = cache.get(DASHBOARD_CACHE_KEY);
+    if (hit) return JSON.parse(hit);
+  }
+  var data = buildData();
+  try {
+    cache.put(DASHBOARD_CACHE_KEY, JSON.stringify(data), DASHBOARD_CACHE_TTL);
+  } catch (err) {
+    // ถ้า payload เกิน 100KB จะ put ไม่ได้ — ปล่อยให้ build สดไปก่อน ไม่ให้ล้ม
+  }
+  return data;
 }
 
 // ════════════════════════════════════════════════════════════

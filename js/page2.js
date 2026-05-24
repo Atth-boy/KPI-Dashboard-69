@@ -524,18 +524,30 @@ function p2_renderProcCard(stepData, mgmtData) {
   }
 }
 
+const p2ProcCache = {};      // projectName → { stepData, mgmtData }
+let p2ProcRequestToken = 0;
+
 async function p2_loadAndRenderProcurement(projectName) {
   const section = document.getElementById('p2-proc-section');
   section.classList.remove('hidden');
-  document.getElementById('p2-proc-stepper-mini').innerHTML =
-    '<div class="proc-loading">กำลังโหลดสถานะ...</div>';
-  document.getElementById('p2-proc-latest-wrap').innerHTML = '';
 
-  let stepData = {}, mgmtData = {};
+  const token  = ++p2ProcRequestToken;
+  const cached = p2ProcCache[projectName];
+
+  if (cached) {
+    p2_renderProcCard(cached.stepData, cached.mgmtData);
+  } else {
+    document.getElementById('p2-proc-stepper-mini').innerHTML =
+      '<div class="proc-loading">กำลังโหลดสถานะ...</div>';
+    document.getElementById('p2-proc-latest-wrap').innerHTML = '';
+  }
+
+  let stepData = {}, mgmtData = {}, ok = false;
   try {
     const url = `${GAS_URL}?action=getProcurementStatus&project=${encodeURIComponent(projectName)}`;
     const res  = await fetch(url);
     if (res.ok) {
+      ok = true;
       const json = await res.json();
       (json.steps || []).forEach(s => {
         if (s.step === 'บริหารโครงการ') {
@@ -544,19 +556,26 @@ async function p2_loadAndRenderProcurement(projectName) {
           stepData[s.step] = { status: s.status, details: s.details, updatedAt: s.updatedAt };
         }
       });
+      p2ProcCache[projectName] = { stepData, mgmtData };
     }
   } catch { /* GAS อาจยังไม่รองรับ */ }
 
-  p2_renderProcCard(stepData, mgmtData);
+  if (token !== p2ProcRequestToken) return;
+  if (ok || !cached) p2_renderProcCard(stepData, mgmtData);
 }
 
 async function init2() {
+  // 1) มี cache → แสดงทันที (แชร์ key เดียวกับหน้าหลัก)
+  const cached = readDataCache();
+  if (cached) renderAll2(cached);
+
+  // 2) ดึงสดเบื้องหลังแล้วทับ
   try {
     const data = await fetchSheetData();
+    writeDataCache(data);
     renderAll2(data);
   } catch (err) {
     console.warn('โหลดข้อมูลไม่ได้:', err);
-    console.warn('⚠ ไม่สามารถโหลดข้อมูลได้');
   }
 }
 
