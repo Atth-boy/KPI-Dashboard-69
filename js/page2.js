@@ -330,10 +330,10 @@ function p2_renderProjectDetail(p) {
   const el = document.getElementById('p2-project-detail');
   el.classList.remove('hidden');
   el.innerHTML = `
-    <div class="detail-project-name">${p.name}</div>
+    <div class="detail-project-name">${p2_esc(p.name)}</div>
     <div class="detail-item">
       <div class="detail-label">ประเภท</div>
-      <div class="detail-value">${p.type}</div>
+      <div class="detail-value">${p2_esc(p.type)}</div>
     </div>
     <div class="detail-item">
       <div class="detail-label">งบ (ลบ.)</div>
@@ -341,20 +341,20 @@ function p2_renderProjectDetail(p) {
     </div>
     <div class="detail-item">
       <div class="detail-label">เลข WBS</div>
-      <div class="detail-value">${p.wbs}</div>
+      <div class="detail-value">${p2_esc(p.wbs)}</div>
     </div>
     <div class="detail-contract-row">
       <div class="detail-item">
         <div class="detail-label">เลขที่สัญญา</div>
-        <div class="detail-value">${p.contract}</div>
+        <div class="detail-value">${p2_esc(p.contract)}</div>
       </div>
       <div class="detail-item">
         <div class="detail-label">วันเริ่มสัญญา</div>
-        <div class="detail-value">${p.startDate}</div>
+        <div class="detail-value">${p2_esc(p.startDate)}</div>
       </div>
       <div class="detail-item">
         <div class="detail-label">วันสิ้นสุดสัญญา</div>
-        <div class="detail-value">${p.endDate}</div>
+        <div class="detail-value">${p2_esc(p.endDate)}</div>
       </div>
     </div>
   `;

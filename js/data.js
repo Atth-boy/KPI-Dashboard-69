@@ -53,8 +53,9 @@ async function fetchSheetData() {
   if (typeof json.lastUpdatedMonth !== 'number') json.lastUpdatedMonth = 0;
 
   json.projects.forEach(p => {
+    p.budget = Number(p.budget) || 0;   // กัน budget ว่าง/ไม่ใช่ตัวเลข → NaN ตอน .toFixed()
     if (!Array.isArray(p.planned) || p.planned.length !== 12) {
-      p.planned = calcPlanned(p.budget || 0, p.startDate, p.endDate);
+      p.planned = calcPlanned(p.budget, p.startDate, p.endDate);
     }
     if (!p.actual) p.actual = Array(12).fill(0);
     p.planned = p.planned.map(v => isNaN(v) ? 0 : v);

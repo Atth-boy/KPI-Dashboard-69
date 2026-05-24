@@ -327,10 +327,10 @@ function renderProjectDetail(p) {
   const el = document.getElementById('project-detail');
   el.classList.remove('hidden');
   el.innerHTML = `
-    <div class="detail-project-name">${p.name}</div>
+    <div class="detail-project-name">${escHtml(p.name)}</div>
     <div class="detail-item">
       <div class="detail-label">ประเภท</div>
-      <div class="detail-value">${p.type}</div>
+      <div class="detail-value">${escHtml(p.type)}</div>
     </div>
     <div class="detail-item">
       <div class="detail-label">งบ (ลบ.)</div>
@@ -338,20 +338,20 @@ function renderProjectDetail(p) {
     </div>
     <div class="detail-item">
       <div class="detail-label">เลข WBS</div>
-      <div class="detail-value">${p.wbs}</div>
+      <div class="detail-value">${escHtml(p.wbs)}</div>
     </div>
     <div class="detail-contract-row">
       <div class="detail-item">
         <div class="detail-label">เลขที่สัญญา</div>
-        <div class="detail-value">${p.contract}</div>
+        <div class="detail-value">${escHtml(p.contract)}</div>
       </div>
       <div class="detail-item">
         <div class="detail-label">วันเริ่มสัญญา</div>
-        <div class="detail-value">${p.startDate}</div>
+        <div class="detail-value">${escHtml(p.startDate)}</div>
       </div>
       <div class="detail-item">
         <div class="detail-label">วันสิ้นสุดสัญญา</div>
-        <div class="detail-value">${p.endDate}</div>
+        <div class="detail-value">${escHtml(p.endDate)}</div>
       </div>
     </div>
   `;
@@ -454,7 +454,7 @@ function renderRanking(projects, lastUpdatedMonth) {
     ? list.map((p, i) => `
         <li class="ranking-item">
           <span class="ranking-rank">${i + 1}.</span>
-          <span class="ranking-name">${p.name}</span>
+          <span class="ranking-name">${escHtml(p.name)}</span>
           <span class="ranking-diff ${cls}">${sign}${Math.abs(p.diff).toFixed(3)} ลบ.</span>
         </li>`).join('')
     : '<li class="ranking-item"><span class="ranking-name" style="color:var(--gray-400)">ไม่มีข้อมูล</span></li>';
