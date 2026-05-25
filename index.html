@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Dashboard งบลงทุน ฝ่ายควบคุมระบบไฟฟ้า</title>
-<link rel="stylesheet" href="css/style.css?v=20260519a">
+<link rel="stylesheet" href="css/style.css?v=20260525a">
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -85,18 +85,18 @@
       <!-- S-curve หลัก -->
       <div class="card chart-card">
         <div class="card-title">งบประมาณลงทุน ปี 2569 (สะสม)</div>
-        <canvas id="chart-scurve-main" height="140"></canvas>
+        <div class="chart-box chart-box-main"><canvas id="chart-scurve-main"></canvas></div>
       </div>
 
       <!-- กราฟรอง 2 กราฟ -->
       <div class="sub-charts">
         <div class="card chart-card">
           <div class="card-title">งบประมาณลงทุนโครงการ (สะสม)</div>
-          <canvas id="chart-project" height="140"></canvas>
+          <div class="chart-box"><canvas id="chart-project"></canvas></div>
         </div>
         <div class="card chart-card">
           <div class="card-title">งบประมาณลงทุนปกติ (สะสม)</div>
-          <canvas id="chart-normal" height="140"></canvas>
+          <div class="chart-box"><canvas id="chart-normal"></canvas></div>
         </div>
       </div>
 
@@ -158,6 +158,6 @@
   </main>
 
   <script src="js/data.js?v=20260524b"></script>
-  <script src="js/app.js?v=20260524b"></script>
+  <script src="js/app.js?v=20260525a"></script>
 </body>
 </html>

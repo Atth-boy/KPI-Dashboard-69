@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Dashboard งบลงทุน — จำแนกตามประเภทงบ</title>
-  <link rel="stylesheet" href="css/style.css?v=20260519a">
+  <link rel="stylesheet" href="css/style.css?v=20260525a">
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -37,7 +37,7 @@
       <div class="kpi2-row" id="kpi-annual">
         <div class="kpi2-skeleton">กำลังโหลด...</div>
       </div>
-      <canvas id="chart-annual" height="140"></canvas>
+      <div class="chart-box"><canvas id="chart-annual"></canvas></div>
     </div>
 
     <!-- กราฟ 2: งบประมาณผูกพันดำเนินการ -->
@@ -46,7 +46,7 @@
       <div class="kpi2-row" id="kpi-commitop">
         <div class="kpi2-skeleton">กำลังโหลด...</div>
       </div>
-      <canvas id="chart-commitop" height="140"></canvas>
+      <div class="chart-box"><canvas id="chart-commitop"></canvas></div>
     </div>
 
     <!-- กราฟ 3: งบประมาณผูกพันการจ่ายเงิน -->
@@ -55,7 +55,7 @@
       <div class="kpi2-row" id="kpi-commitpay">
         <div class="kpi2-skeleton">กำลังโหลด...</div>
       </div>
-      <canvas id="chart-commitpay" height="140"></canvas>
+      <div class="chart-box"><canvas id="chart-commitpay"></canvas></div>
     </div>
 
 
@@ -114,6 +114,6 @@
   </main>
 
   <script src="js/data.js?v=20260524b"></script>
-  <script src="js/page2.js?v=20260524b"></script>
+  <script src="js/page2.js?v=20260525a"></script>
 </body>
 </html>

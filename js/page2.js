@@ -24,6 +24,7 @@ function makeChart2(id, config) {
 function chartOpts2() {
   return {
     responsive: true,
+    maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: {

@@ -154,6 +154,11 @@ main {
 .content { display: flex; flex-direction: column; gap: 0.8rem; }
 .chart-card canvas { width: 100% !important; }
 
+/* ครอบ canvas เพื่อล็อกความสูงคงที่ — กัน Chart.js ขยายความสูงเองตามความกว้าง */
+.chart-box { position: relative; height: 230px; }
+.chart-box-main { height: 260px; }
+.sub-charts .chart-box { height: 210px; }
+
 /* ── Sub charts ── */
 .sub-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
 

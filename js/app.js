@@ -178,6 +178,7 @@ function renderDonut(budgetProject, budgetNormal) {
 function chartOptions(unit) {
   return {
     responsive: true,
+    maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: {
