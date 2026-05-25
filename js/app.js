@@ -652,6 +652,8 @@ async function init() {
   // 2) ดึงข้อมูลสดเบื้องหลังแล้วทับ
   try {
     const data = await fetchSheetData();
+    // ถ้าข้อมูลสด = cache (ไม่เปลี่ยน) → ไม่ต้องวาดใหม่ กันกราฟกระพริบ
+    if (cached && JSON.stringify(data) === JSON.stringify(cached)) return;
     globalData = data;
     writeDataCache(data);
     renderAll(data);
